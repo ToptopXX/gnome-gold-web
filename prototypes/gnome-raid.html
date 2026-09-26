@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Gnome Raid: Web3 Adventure</title>
+    <style>
+        /* --- СТИЛИ (Мультяшный фэнтези стиль) --- */
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: #87CEEB; /* Небесно-голубой */
+            background-image: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .game-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 800px;
+            padding: 30px;
+            text-align: center;
+            border: 5px solid #6A4C93; /* Глубокий фиолетовый */
+        }
+
+        h1 { color: #DAA520; text-shadow: 2px 2px #fff; margin-bottom: 10px; font-size: 2.5em;}
+        
+        .stats-bar {
+            background-color: #f0e68c; /* Khaki */
+            padding: 10px 20px;
+            border-radius: 50px;
+            display: inline-block;
+            margin-bottom: 30px;
+            font-weight: bold;
+            color: #556b2f;
+            box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);
+        }
+
+        /* Сетка слотов */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); /* 5 гномов + 1 пет + 1 артефакт */
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .slot {
+            background-color: #fff;
+            border-radius: 15px;
+            padding: 10px;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            border: 3px solid #ddd;
+            position: relative;
+        }
+
+        .slot:hover {
+            transform: translateY(-5px);
+            border-color: #DAA520;
+        }
+
+        .slot.filled { background-color: #e6fffa; border-color: #48bb78; }
+        
+        .icon { font-size: 3em; margin-bottom: 10px; }
+        
+        .status-badge {
+            font-size: 0.7em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: white;
+            display: none; /* Скрыто по умолчанию */
+        }
+
+        .slot.filled .status-badge { display: block; }
+
+        /* Цвета для разных статусов */
+        .status-idle { background-color: #48bb78; } /* Зеленый - свободен */
+        .status-raiding { background-color: #ed8936; animation: pulse 1s infinite; } /* Оранжевый - в рейде */
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(237, 137, 54, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(237, 137, 54, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(237, 137, 54, 0); }
+        }
+
+        /* Модальное окно выбора времени */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+
+        .modal {
+            background: white; padding: 30px; border-radius: 20px; text-align: center; width: 400px;
+            box-shadow: 0 0 50px rgba(218, 165, 32, 0.5);
+        }
+
+        .btn {
+            background-color: #6A4C93; color: white; border: none; padding: 10px 20px; 
+            font-size: 1.2em; border-radius: 10px; cursor: pointer; margin-top: 15px;
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: #5a3d7c; }
+
+        .raid-options { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px;}
+        .option-card {
+            border: 2px solid #ddd; padding: 10px; border-radius: 10px; width: 45%; cursor: pointer;
+        }
+        .option-card:hover { background-color: #f9f9f9; border-color: #DAA520; }
+
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h1>🧙‍♂️ Гномий Поход</h1>
+    
+    <!-- Статистика -->
+    <div class="stats-bar">
+        💰 Золото: <span id="gold-balance">0</span>
+    </div>
+
+    <!-- Инвентарь -->
+    <div class="inventory-grid" id="slots-container">
+        <!-- Слоты генерируются JS -->
+    </div>
+
+    <p style="font-size: 0.9em; color: #777;">Кликни на свободного гнома, чтобы отправить в рейд!</p>
+</div>
+
+<!-- Модальное окно выбора времени -->
+<div class="modal-overlay" id="raid-modal">
+    <div class="modal">
+        <h2>Выберите время рейда</h2>
+        <p id="selected-gnome-name"></p>
+        
+        <div class="raid-options">
+            <div class="option-card" onclick="startRaid(3)">
+                ⚡ Быстрый<br>
+                3 часа<br>
+                <span style="color:green; font-size:0.8em;">Высокая доходность/час</span>
+            </div>
+            <div class="option-card" onclick="startRaid(10)">
+                🐢 Надежный<br>
+                10 часов<br>
+                <span style="color:blue; font-size:0.8em;">Стабильный доход</span>
+            </div>
+        </div>
+        
+        <button class="btn" onclick="closeModal()" style="background:#e53e3e;">Отмена</button>
+    </div>
+</div>
+
+<script>
+    // --- ЛОГИКА ИГРЫ ---
+    
+    let gold = 100; // Стартовое золото
+    const maxGnomes = 5;
+    let gnomeSlots = [];
+    let petSlot = null;
+    let artifactSlot = null;
+    let selectedGnomeIndex = null;
+
+    // Инициализация слотов при загрузке
+    function initGame() {
+        renderSlots();
+        updateGoldUI();
+        
+        // Таймер проверки завершения рейдов (каждую секунду)
+        setInterval(checkRaids, 1000);
+    }
+
+    // Рендер сетки слотов
+    function renderSlots() {
+        const container = document.getElementById('slots-container');
+        container.innerHTML = '';
+
+        // 5 Гномов
+        for (let i = 0; i < maxGnomes; i++) {
+            let gnome = gnomeSlots[i];
+            
+            let slotDiv = document.createElement('div');
+            slotDiv.className = 'slot';
+            if (gnome && !gnome.isRaiding) slotDiv.classList.add('filled', 'status-idle');
+            else if (gnome && gnome.isRaiding) slotDiv.classList.add('filled', 'status-raiding');
+
+            // Иконка гнома
+            let icon = document.createElement('div');
+            icon.className = 'icon';
+            icon.textContent = gnome ? '🧙‍♂️' : '❓';
+            icon.style.filter = (gnome && !gnome.isRaiding) ? '' : 'grayscale(100%) opacity(0.5)'; // Если в рейде - серым
+            
+            slotDiv.appendChild(icon);
+
+            // Статус бейдж
+            let badge = document.createElement('div');
+            badge.className = 'status-badge status-idle';
+            badge.textContent = 'Свободен';
+            
+            if (gnome && gnome.isRaiding) {
+                badge.className = 'status-badge status-raiding';
+                // Форматируем время возврата
+                let timeLeft = Math.ceil((gnome.returnTime - Date.now()) / 1000 / 60);
+                badge.textContent = `Возврат: ${timeLeft} мин`;
+            }
+
+            slotDiv.appendChild(badge);
+            
+            // Клик по слоту гнома
+            slotDiv.onclick = () => handleGnomeClick(i, gnome);
+            
+            container.appendChild(slotDiv);
+        }
+
+        // Слот Пета (6-й)
+        let petSlotDiv = document.createElement('div');
+        petSlotDiv.className = 'slot';
+        if(petSlot) {
+            petSlotDiv.classList.add('filled', 'status-idle');
+            petSlotDiv.querySelector('.icon') || (() => { /* логика ниже */ })();
+        }
+        
+        let petIcon = document.createElement('div');
+        petIcon.className = 'icon';
+        petIcon.textContent = petSlot ? '🐉' : '🔒'; // Дракон или замок
+        if(petSlot) {
+            petIcon.style.filter = '';
+            petIcon.onclick = () => alert("Пет дает +5% к награде (в разработке)!");
+        } else {
+             petIcon.style.color = '#ccc';
+        }
+
+        let petBadge = document.createElement('div');
+        petBadge.className = 'status-badge status-idle';
+        petBadge.textContent = petSlot ? "Активен" : "";
+
+        petSlotDiv.appendChild(petIcon);
+        petSlotDiv.appendChild(petBadge);
+        
+        // Если пет занят, можно сделать его кликабельным для смены, но пока просто инфо
+        if(petSlot) {
+            petSlotDiv.onclick = () => alert("Пет: 'Рык! Я не могу идти в рейд с гномами.'");
+        }
+
+        container.appendChild(petSlotDiv);
+
+
+        // Слот Артефакта (7-й)
+        let artSlotDiv = document.createElement('div');
+        artSlotDiv.className = 'slot';
+        
+        let artIcon = document.createElement('div');
+        artIcon.className = 'icon';
+        artIcon.textContent = artifactSlot ? '💍' : '🔒'; // Кольцо
+        
+        if(artifactSlot) {
+             artIcon.onclick = () => alert("Артефакт: 'Я даю защиту от драконов!'");
+        }
+
+        let artBadge = document.createElement('div');
+        artBadge.className = 'status-badge status-idle';
+        artBadge.textContent = artifactSlot ? "Экипирован" : "";
+
+        artSlotDiv.appendChild(artIcon);
+        artSlotDiv.appendChild(artBadge);
+        container.appendChild(artSlotDiv);
+    }
+
+    function updateGoldUI() {
+        document.getElementById('gold-balance').innerText = gold;
+    }
+
+    // Обработка клика по гному
+    function handleGnomeClick(index, gnome) {
+        if (gnome.isRaiding) return; // Уже в рейде
+        
+        selectedGnomeIndex = index;
+        document.getElementById('selected-gnome-name').innerText = `Гном #${index + 1}`;
+        document.getElementById('raid-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('raid-modal').style.display = 'none';
+        selectedGnomeIndex = null;
+    }
+
+    // Запуск рейда
+    function startRaid(hours) {
+        let durationMs = hours * 60 * 60 * 1000;
+        
+        gnomeSlots[selectedGnomeIndex] = {
+            isRaiding: true,
+            returnTime: Date.now() + durationMs
+        };
+
+        closeModal();
+        renderSlots();
+    }
+
+    // Проверка таймеров каждую секунду
+    function checkRaids() {
+        let now = Date.now();
+        let hasChanges = false;
+
+        gnomeSlots.forEach((gnome, index) => {
+            if (gnome && gnome.isRaiding && now >= gnome.returnTime) {
+                // Рейд завершен!
+                const reward = calculateReward(index); 
+                gold += reward;
+                
+                gnome.isRaiding = false;
+                hasChanges = true;
+                updateGoldUI();
+            }
+        });
+
+        if (hasChanges) renderSlots();
+    }
+
+    // Математика наград
+    function calculateReward(gnomeId) {
+        let baseReward = 10 + Math.floor(Math.random() * 5); // 10-14 монет
+        
+        // Бонус за скорость (3 часа выгоднее в час, но здесь мы просто дадим фиксированный бонус для теста)
+        // Допустим, гномы имеют разную скорость. Случайный фактор.
+        
+        if (baseReward > 12) return baseReward; 
+        return baseReward;
+    }
+
+    initGame();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,5868 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+>
+
+<title>Gnome Gold Runner</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    background: #211927;
+
+    font-family:
+        "Trebuchet MS",
+        Arial,
+        sans-serif;
+
+    color: white;
+}
+
+canvas {
+    display: block;
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+#hud {
+
+    position: fixed;
+
+    z-index: 20;
+
+    left: 14px;
+    top: 14px;
+
+    min-width: 170px;
+
+    padding: 11px 15px;
+
+    background:
+        rgba(47, 34, 48, .91);
+
+    border:
+        3px solid #1d151b;
+
+    border-radius:
+        17px;
+
+    box-shadow:
+        0 5px 0 rgba(0,0,0,.25);
+
+}
+
+.hudRow {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    gap: 22px;
+
+    margin: 4px 0;
+
+    font-weight: 900;
+
+    font-size: 14px;
+
+}
+
+.hudValue {
+    color: #f6d260;
+}
+
+
+/* =========================================================
+   OVERLAY
+========================================================= */
+
+.overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 50;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(17, 11, 19, .87);
+
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.panel {
+
+    width:
+        min(520px, 94vw);
+
+    padding:
+        29px 25px;
+
+    text-align: center;
+
+    background:
+        #3a2a3c;
+
+    border:
+        5px solid #171116;
+
+    border-radius:
+        28px;
+
+    box-shadow:
+
+        0 11px 0
+        rgba(0,0,0,.28),
+
+        inset
+        0 0 0
+        3px #725263;
+
+}
+
+.title {
+
+    margin:
+        0;
+
+    color:
+        #f2ce5d;
+
+    font-size:
+        clamp(35px, 9vw, 55px);
+
+    line-height:
+        .95;
+
+    letter-spacing:
+        -2px;
+
+    text-shadow:
+
+        3px 3px 0 #24171c,
+
+        5px 5px 0 rgba(0,0,0,.2);
+
+}
+
+.subtitle {
+
+    margin-top:
+        8px;
+
+    margin-bottom:
+        24px;
+
+    font-size:
+        12px;
+
+    letter-spacing:
+        4px;
+
+    color:
+        #c99faf;
+
+    font-weight:
+        900;
+
+}
+
+.description {
+
+    color:
+        #eadde1;
+
+    line-height:
+        1.6;
+
+    font-size:
+        15px;
+
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+button {
+
+    border:
+        4px solid #241618;
+
+    border-radius:
+        14px;
+
+    margin:
+        7px;
+
+    padding:
+        13px 21px;
+
+    cursor:
+        pointer;
+
+    font-size:
+        15px;
+
+    font-weight:
+        1000;
+
+    color:
+        #302013;
+
+    background:
+        #ebc651;
+
+    box-shadow:
+        0 5px 0 #704821;
+
+}
+
+button:active {
+
+    transform:
+        translateY(4px);
+
+    box-shadow:
+        0 1px 0 #704821;
+
+}
+
+.secondary {
+
+    background:
+        #aa8297;
+
+    color:
+        #20151a;
+
+    box-shadow:
+        0 5px 0 #543849;
+
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+input {
+
+    width:
+        100%;
+
+    margin-top:
+        12px;
+
+    padding:
+        14px;
+
+    border:
+        4px solid #1d141a;
+
+    border-radius:
+        13px;
+
+    outline:
+        none;
+
+    background:
+        #241a22;
+
+    color:
+        white;
+
+    font-family:
+        monospace;
+
+}
+
+#walletError {
+
+    min-height:
+        24px;
+
+    padding-top:
+        6px;
+
+    color:
+        #ff9494;
+
+}
+
+
+/* =========================================================
+   RESULT
+========================================================= */
+
+.result {
+
+    margin:
+        15px 0 4px;
+
+    color:
+        #f7d565;
+
+    font-size:
+        45px;
+
+    font-weight:
+        1000;
+
+}
+
+
+/* =========================================================
+   LEADERBOARD
+========================================================= */
+
+#leaderboard {
+
+    max-height:
+        320px;
+
+    overflow-y:
+        auto;
+
+    margin:
+        18px 0;
+
+}
+
+.leaderRow {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        40px 1fr 80px;
+
+    gap:
+        8px;
+
+    padding:
+        10px 5px;
+
+    text-align:
+        left;
+
+    border-bottom:
+        2px dashed
+        rgba(255,255,255,.12);
+
+}
+
+.wallet {
+
+    overflow:
+        hidden;
+
+    white-space:
+        nowrap;
+
+    text-overflow:
+        ellipsis;
+
+    font-family:
+        monospace;
+
+}
+
+.leaderScore {
+
+    text-align:
+        right;
+
+    color:
+        #f3d260;
+
+    font-weight:
+        900;
+
+}
+
+
+/* =========================================================
+   HELP
+========================================================= */
+
+#help {
+
+    position:
+        fixed;
+
+    z-index:
+        15;
+
+    left:
+        50%;
+
+    bottom:
+        17px;
+
+    transform:
+        translateX(-50%);
+
+    padding:
+        9px 14px;
+
+    border:
+        2px solid #4e3a49;
+
+    border-radius:
+        12px;
+
+    background:
+        rgba(27,20,29,.82);
+
+    font-size:
+        13px;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+#mobileControls {
+
+    display:
+        none;
+
+    position:
+        fixed;
+
+    z-index:
+        25;
+
+    left:
+        0;
+
+    right:
+        0;
+
+    bottom:
+        18px;
+
+    justify-content:
+        space-between;
+
+    padding:
+        0 20px;
+
+    pointer-events:
+        none;
+
+}
+
+.mobileGroup {
+
+    display:
+        flex;
+
+    gap:
+        8px;
+
+}
+
+.mobileButton {
+
+    pointer-events:
+        auto;
+
+    width:
+        62px;
+
+    height:
+        62px;
+
+    padding:
+        0;
+
+    margin:
+        0;
+
+    border-radius:
+        50%;
+
+    background:
+        rgba(64,47,67,.88);
+
+    color:
+        #f0d66f;
+
+    box-shadow:
+        none;
+
+    font-size:
+        24px;
+
+}
+
+
+@media (max-width: 760px) {
+
+    #help {
+        display: none;
+    }
+
+    #mobileControls {
+        display: flex;
+    }
+
+    #hud {
+
+        left:
+            8px;
+
+        top:
+            8px;
+
+        min-width:
+            150px;
+
+        padding:
+            9px 11px;
+
+    }
+
+    .hudRow {
+        font-size: 12px;
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+
+<!-- =====================================================
+     HUD
+===================================================== -->
+
+<div id="hud">
+
+    <div class="hudRow">
+        <span>ROAD</span>
+        <span
+            class="hudValue"
+            id="distance"
+        >
+            0 m
+        </span>
+    </div>
+
+    <div class="hudRow">
+        <span>GOLD</span>
+        <span
+            class="hudValue"
+            id="gold"
+        >
+            0
+        </span>
+    </div>
+
+    <div class="hudRow">
+        <span>SCORE</span>
+        <span
+            class="hudValue"
+            id="score"
+        >
+            0
+        </span>
+    </div>
+
+    <div class="hudRow">
+        <span>SPEED</span>
+        <span
+            class="hudValue"
+            id="speed"
+        >
+            1.0x
+        </span>
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     START
+===================================================== -->
+
+<div
+    id="startScreen"
+    class="overlay"
+>
+
+    <div class="panel">
+
+        <h1 class="title">
+
+            GNOME<br>
+            RUNNER
+
+        </h1>
+
+        <div class="subtitle">
+
+            THE GOLDEN MINE
+
+        </div>
+
+        <p class="description">
+
+            Беги через старую волшебную шахту,
+            собирай золотые самородки
+            и уворачивайся от всего,
+            что другие гномы почему-то
+            бросили посреди дороги.
+
+        </p>
+
+        <button id="startButton">
+
+            ⛏ НАЧАТЬ
+
+        </button>
+
+        <button
+            id="showLeaderboardStart"
+            class="secondary"
+        >
+
+            🏆 ЛИДЕРЫ
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     GAME OVER
+===================================================== -->
+
+<div
+    id="gameOver"
+    class="overlay hidden"
+>
+
+    <div class="panel">
+
+        <h1 class="title">
+
+            FINISH!
+
+        </h1>
+
+        <div
+            class="result"
+            id="finalScore"
+        >
+            0
+        </div>
+
+        <p>
+
+            Собрано золота:
+            <b id="finalGold">0</b>
+
+        </p>
+
+        <p class="description">
+
+            Введи публичный EVM-адрес,
+            чтобы записать результат.
+
+        </p>
+
+        <input
+            id="walletInput"
+            placeholder="0x..."
+            autocomplete="off"
+            spellcheck="false"
+        >
+
+        <div id="walletError"></div>
+
+        <button id="saveScore">
+
+            СОХРАНИТЬ
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     LEADERBOARD
+===================================================== -->
+
+<div
+    id="leaderboardScreen"
+    class="overlay hidden"
+>
+
+    <div class="panel">
+
+        <h1 class="title">
+
+            TOP<br>
+            MINERS
+
+        </h1>
+
+        <div id="leaderboard"></div>
+
+        <button id="restartButton">
+
+            НОВЫЙ ЗАБЕГ
+
+        </button>
+
+        <button
+            id="closeLeaderboard"
+            class="secondary"
+        >
+
+            НАЗАД
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<div id="help">
+
+    ← → / A D — движение · SPACE — прыжок
+
+</div>
+
+
+
+<div id="mobileControls">
+
+    <div class="mobileGroup">
+
+        <button
+            id="leftButton"
+            class="mobileButton"
+        >
+            ◀
+        </button>
+
+        <button
+            id="rightButton"
+            class="mobileButton"
+        >
+            ▶
+        </button>
+
+    </div>
+
+    <button
+        id="jumpButton"
+        class="mobileButton"
+    >
+        ▲
+    </button>
+
+</div>
+
+
+
+<script type="module">
+
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js";
+
+
+/* =========================================================
+   PERFORMANCE
+========================================================= */
+
+const MOBILE =
+    innerWidth <
+    800;
+
+
+const PIXEL_RATIO =
+    Math.min(
+
+        devicePixelRatio,
+
+        MOBILE
+            ? 1
+            : 1.4
+
+    );
+
+
+/* =========================================================
+   CONSTANTS
+
+   ВАЖНО:
+   Камера смотрит вдоль +Z.
+
+   Поэтому экранное "лево" соответствует
+   положительному X.
+
+   Именно здесь была инверсия.
+========================================================= */
+
+const LANES = [
+
+     2.15,   // SCREEN LEFT
+
+     0,
+
+    -2.15    // SCREEN RIGHT
+
+];
+
+
+const BASE_SPEED =
+    8;
+
+
+const MAX_SPEED =
+    22;
+
+
+const SEGMENT_LENGTH =
+    28;
+
+
+const SEGMENT_COUNT =
+    MOBILE
+        ? 5
+        : 6;
+
+
+/* =========================================================
+   SCENE
+========================================================= */
+
+const scene =
+    new THREE.Scene();
+
+
+scene.background =
+    new THREE.Color(
+        0x382c3c
+    );
+
+
+scene.fog =
+    new THREE.Fog(
+        0x382c3c,
+        22,
+        72
+    );
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+const camera =
+    new THREE.PerspectiveCamera(
+
+        60,
+
+        innerWidth /
+        innerHeight,
+
+        .1,
+
+        180
+
+    );
+
+
+camera.position.set(
+    0,
+    4.6,
+    -8.5
+);
+
+
+/* =========================================================
+   RENDERER
+========================================================= */
+
+const renderer =
+    new THREE.WebGLRenderer({
+
+        antialias:
+            !MOBILE,
+
+        powerPreference:
+            "high-performance"
+
+    });
+
+
+renderer.setPixelRatio(
+    PIXEL_RATIO
+);
+
+
+renderer.setSize(
+    innerWidth,
+    innerHeight
+);
+
+
+renderer.shadowMap.enabled =
+    false;
+
+
+renderer.outputColorSpace =
+    THREE.SRGBColorSpace;
+
+
+document.body.prepend(
+    renderer.domElement
+);
+
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+scene.add(
+
+    new THREE.HemisphereLight(
+
+        0xffdab1,
+
+        0x322638,
+
+        2.7
+
+    )
+
+);
+
+
+const mainLight =
+    new THREE.DirectionalLight(
+
+        0xffd9ab,
+
+        1.9
+
+    );
+
+
+mainLight.position.set(
+    -5,
+    10,
+    -5
+);
+
+
+scene.add(
+    mainLight
+);
+
+
+/* =========================================================
+   COLORS
+========================================================= */
+
+const C = {
+
+    ink:
+        0x21161d,
+
+    skin:
+        0xeaa477,
+
+    cheek:
+        0xd17e65,
+
+    beard:
+        0x276f6d,
+
+    beardLight:
+        0x398d87,
+
+    green:
+        0x526844,
+
+    greenLight:
+        0x708158,
+
+    leather:
+        0x68452f,
+
+    leatherDark:
+        0x3c2922,
+
+    boots:
+        0x302120,
+
+    gold:
+        0xe4af3f,
+
+    goldLight:
+        0xffd967,
+
+    rock:
+        0x665368,
+
+    rock2:
+        0x554557,
+
+    rockDark:
+        0x443746,
+
+    floor:
+        0x735849,
+
+    path:
+        0x806455,
+
+    wood:
+        0x74503a,
+
+    woodDark:
+        0x503629,
+
+    purple:
+        0x9c6bc6,
+
+    purpleDark:
+        0x684d88,
+
+    mushroom:
+        0xb45f62,
+
+    mushroomLight:
+        0xe9c6a0,
+
+    blue:
+        0x59afc1,
+
+    white:
+        0xf2e6d8,
+
+    metal:
+        0x747176
+
+};
+
+
+/* =========================================================
+   MATERIAL
+========================================================= */
+
+function toon(
+    color
+) {
+
+    return new THREE.MeshToonMaterial({
+
+        color,
+
+        flatShading:
+            true
+
+    });
+
+}
+
+
+/* =========================================================
+   OUTLINE
+========================================================= */
+
+const outlineMaterial =
+    new THREE.MeshBasicMaterial({
+
+        color:
+            C.ink,
+
+        side:
+            THREE.BackSide
+
+    });
+
+
+function outlined(
+
+    geometry,
+
+    material,
+
+    outlineScale = 1.08
+
+) {
+
+    const group =
+        new THREE.Group();
+
+
+    const outline =
+        new THREE.Mesh(
+
+            geometry,
+
+            outlineMaterial
+
+        );
+
+
+    outline.scale.setScalar(
+        outlineScale
+    );
+
+
+    group.add(
+        outline
+    );
+
+
+    const actual =
+        new THREE.Mesh(
+
+            geometry,
+
+            material
+
+        );
+
+
+    group.add(
+        actual
+    );
+
+
+    return group;
+
+}
+
+
+/* =========================================================
+   GNOME
+========================================================= */
+
+function createGnome() {
+
+    const root =
+        new THREE.Group();
+
+
+    /* =====================================================
+       SMALLER WHOLE CHARACTER
+    ===================================================== */
+
+    root.scale.setScalar(
+        .72
+    );
+
+
+    /* =====================================================
+       BODY
+    ===================================================== */
+
+    const torso =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .64,
+                9,
+                7
+            ),
+
+            toon(
+                C.green
+            ),
+
+            1.08
+
+        );
+
+
+    torso.position.y =
+        1.42;
+
+
+    torso.scale.set(
+        1,
+        1.05,
+        .82
+    );
+
+
+    root.add(
+        torso
+    );
+
+
+    /* =====================================================
+       HEAD
+    ===================================================== */
+
+    const head =
+        new THREE.Group();
+
+
+    head.position.set(
+        0,
+        2.42,
+        .05
+    );
+
+
+    root.add(
+        head
+    );
+
+
+    const face =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .79,
+                11,
+                8
+            ),
+
+            toon(
+                C.skin
+            ),
+
+            1.07
+
+        );
+
+
+    face.scale.set(
+        1,
+        .91,
+        .91
+    );
+
+
+    head.add(
+        face
+    );
+
+
+    /* =====================================================
+       CHEEKS
+    ===================================================== */
+
+    for (
+        const x of [-.48, .48]
+    ) {
+
+        const cheek =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .19,
+                    7,
+                    5
+                ),
+
+                toon(
+                    C.cheek
+                )
+
+            );
+
+
+        cheek.scale.set(
+            1.1,
+            .65,
+            .25
+        );
+
+
+        cheek.position.set(
+            x,
+            -.16,
+            .71
+        );
+
+
+        head.add(
+            cheek
+        );
+
+    }
+
+
+    /* =====================================================
+       EARS
+    ===================================================== */
+
+    for (
+        const side of [-1, 1]
+    ) {
+
+        const ear =
+            outlined(
+
+                new THREE.ConeGeometry(
+                    .23,
+                    .57,
+                    7
+                ),
+
+                toon(
+                    C.skin
+                ),
+
+                1.09
+
+            );
+
+
+        ear.position.set(
+            side * .86,
+            .02,
+            .02
+        );
+
+
+        ear.rotation.z =
+            side < 0
+                ? Math.PI / 2
+                : -Math.PI / 2;
+
+
+        ear.rotation.y =
+            side *
+            -.08;
+
+
+        head.add(
+            ear
+        );
+
+    }
+
+
+    /* =====================================================
+       EYES
+    ===================================================== */
+
+    function createEye(
+        x
+    ) {
+
+        const eye =
+            new THREE.Group();
+
+
+        eye.position.set(
+            x,
+            .22,
+            .69
+        );
+
+
+        head.add(
+            eye
+        );
+
+
+        const white =
+            outlined(
+
+                new THREE.SphereGeometry(
+                    .21,
+                    9,
+                    6
+                ),
+
+                toon(
+                    C.white
+                ),
+
+                1.06
+
+            );
+
+
+        white.scale.set(
+            .9,
+            1.25,
+            .44
+        );
+
+
+        eye.add(
+            white
+        );
+
+
+        const iris =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .108,
+                    7,
+                    5
+                ),
+
+                toon(
+                    C.blue
+                )
+
+            );
+
+
+        iris.scale.z =
+            .4;
+
+
+        iris.position.z =
+            .13;
+
+
+        eye.add(
+            iris
+        );
+
+
+        const pupil =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .052,
+                    6,
+                    5
+                ),
+
+                toon(
+                    C.ink
+                )
+
+            );
+
+
+        pupil.scale.z =
+            .35;
+
+
+        pupil.position.z =
+            .18;
+
+
+        eye.add(
+            pupil
+        );
+
+
+        const shine =
+            new THREE.Mesh(
+
+                new THREE.CircleGeometry(
+                    .023,
+                    6
+                ),
+
+                new THREE.MeshBasicMaterial({
+
+                    color:
+                        0xffffff
+
+                })
+
+            );
+
+
+        shine.position.set(
+            -.025,
+            .035,
+            .215
+        );
+
+
+        eye.add(
+            shine
+        );
+
+    }
+
+
+    createEye(
+        -.27
+    );
+
+
+    createEye(
+        .27
+    );
+
+
+    /* =====================================================
+       EYEBROWS
+    ===================================================== */
+
+    function createBrow(
+        x
+    ) {
+
+        const brow =
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+                    .35,
+                    .08,
+                    .06
+                ),
+
+                toon(
+                    C.beard
+                )
+
+            );
+
+
+        brow.position.set(
+            x,
+            .48,
+            .71
+        );
+
+
+        brow.rotation.z =
+            x < 0
+                ? -.16
+                : .16;
+
+
+        head.add(
+            brow
+        );
+
+    }
+
+
+    createBrow(
+        -.27
+    );
+
+
+    createBrow(
+        .27
+    );
+
+
+    /* =====================================================
+       BIG CARTOON NOSE
+    ===================================================== */
+
+    const nose =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .23,
+                8,
+                6
+            ),
+
+            toon(
+                C.cheek
+            ),
+
+            1.08
+
+        );
+
+
+    nose.scale.set(
+        1.15,
+        .82,
+        1
+    );
+
+
+    nose.position.set(
+        0,
+        -.05,
+        .77
+    );
+
+
+    head.add(
+        nose
+    );
+
+
+    /* =====================================================
+       MOUTH
+    ===================================================== */
+
+    const mouth =
+        new THREE.Mesh(
+
+            new THREE.TorusGeometry(
+                .16,
+                .025,
+                5,
+                12,
+                Math.PI
+            ),
+
+            toon(
+                C.ink
+            )
+
+        );
+
+
+    mouth.rotation.z =
+        Math.PI;
+
+
+    mouth.position.set(
+        0,
+        -.34,
+        .775
+    );
+
+
+    head.add(
+        mouth
+    );
+
+
+    /* =====================================================
+       BEARD BASE
+    ===================================================== */
+
+    const beard =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .60,
+                9,
+                7
+            ),
+
+            toon(
+                C.beard
+            ),
+
+            1.065
+
+        );
+
+
+    beard.scale.set(
+        1,
+        .82,
+        .55
+    );
+
+
+    beard.position.set(
+        0,
+        -.50,
+        .51
+    );
+
+
+    head.add(
+        beard
+    );
+
+
+    /* =====================================================
+       BEARD CURLS
+
+       Круглые неровные локоны делают бороду
+       гораздо меньше похожей на 3D-шар.
+    ===================================================== */
+
+    const curlPositions = [
+
+        [-.43, -.57],
+        [-.23, -.70],
+        [ 0,   -.76],
+        [ .23, -.70],
+        [ .43, -.57]
+
+    ];
+
+
+    for (
+        const [x,y]
+        of curlPositions
+    ) {
+
+        const curl =
+            outlined(
+
+                new THREE.SphereGeometry(
+                    .18,
+                    7,
+                    5
+                ),
+
+                toon(
+                    Math.random() >
+                    .5
+                    ?
+                    C.beard
+                    :
+                    C.beardLight
+                ),
+
+                1.06
+
+            );
+
+
+        curl.scale.set(
+            1,
+            1.3,
+            .6
+        );
+
+
+        curl.position.set(
+            x,
+            y,
+            .56
+        );
+
+
+        head.add(
+            curl
+        );
+
+    }
+
+
+    /* =====================================================
+       MOUSTACHE
+    ===================================================== */
+
+    for (
+        const side of [-1,1]
+    ) {
+
+        const moustache =
+            outlined(
+
+                new THREE.SphereGeometry(
+                    .25,
+                    7,
+                    5
+                ),
+
+                toon(
+                    C.beardLight
+                ),
+
+                1.05
+
+            );
+
+
+        moustache.scale.set(
+            1.4,
+            .28,
+            .34
+        );
+
+
+        moustache.position.set(
+            side * .22,
+            -.21,
+            .78
+        );
+
+
+        moustache.rotation.z =
+            side *
+            .18;
+
+
+        head.add(
+            moustache
+        );
+
+    }
+
+
+    /* =====================================================
+       HAT
+    ===================================================== */
+
+    const hatBrim =
+        outlined(
+
+            new THREE.CylinderGeometry(
+                .84,
+                .84,
+                .13,
+                11
+            ),
+
+            toon(
+                C.greenLight
+            ),
+
+            1.07
+
+        );
+
+
+    hatBrim.position.y =
+        .68;
+
+
+    /* slight crooked cartoon brim */
+
+    hatBrim.rotation.z =
+        -.055;
+
+
+    head.add(
+        hatBrim
+    );
+
+
+    const hat =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .65,
+                9,
+                6
+            ),
+
+            toon(
+                C.green
+            ),
+
+            1.07
+
+        );
+
+
+    hat.scale.set(
+        1,
+        .58,
+        .87
+    );
+
+
+    hat.position.set(
+        -.03,
+        .91,
+        -.01
+    );
+
+
+    hat.rotation.z =
+        -.06;
+
+
+    head.add(
+        hat
+    );
+
+
+    /* =====================================================
+       HEAD LAMP
+    ===================================================== */
+
+    const lampHousing =
+        outlined(
+
+            new THREE.CylinderGeometry(
+                .18,
+                .18,
+                .11,
+                8
+            ),
+
+            toon(
+                C.leatherDark
+            ),
+
+            1.08
+
+        );
+
+
+    lampHousing.rotation.x =
+        Math.PI / 2;
+
+
+    lampHousing.position.set(
+        0,
+        .97,
+        .63
+    );
+
+
+    head.add(
+        lampHousing
+    );
+
+
+    const lampGlass =
+        new THREE.Mesh(
+
+            new THREE.CircleGeometry(
+                .12,
+                8
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0xffdb65
+
+            })
+
+        );
+
+
+    lampGlass.position.set(
+        0,
+        .97,
+        .705
+    );
+
+
+    head.add(
+        lampGlass
+    );
+
+
+    /* =====================================================
+       LEGS
+    ===================================================== */
+
+    const leftLeg =
+        createLeg();
+
+
+    const rightLeg =
+        createLeg();
+
+
+    leftLeg.position.set(
+        -.31,
+        .92,
+        0
+    );
+
+
+    rightLeg.position.set(
+        .31,
+        .92,
+        0
+    );
+
+
+    root.add(
+        leftLeg,
+        rightLeg
+    );
+
+
+    /* =====================================================
+       ARMS
+    ===================================================== */
+
+    const leftArm =
+        createArm();
+
+
+    const rightArm =
+        createArm();
+
+
+    leftArm.position.set(
+        -.65,
+        1.66,
+        0
+    );
+
+
+    rightArm.position.set(
+        .65,
+        1.66,
+        0
+    );
+
+
+    root.add(
+        leftArm,
+        rightArm
+    );
+
+
+    /* =====================================================
+       PICKAXE
+    ===================================================== */
+
+    const pickaxe =
+        new THREE.Group();
+
+
+    const handle =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .045,
+                .055,
+                1.30,
+                6
+            ),
+
+            toon(
+                C.wood
+            )
+
+        );
+
+
+    pickaxe.add(
+        handle
+    );
+
+
+    const headPiece =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .88,
+                .09,
+                .10
+            ),
+
+            toon(
+                C.metal
+            )
+
+        );
+
+
+    headPiece.position.y =
+        .61;
+
+
+    pickaxe.add(
+        headPiece
+    );
+
+
+    pickaxe.position.set(
+        .20,
+        -.68,
+        .02
+    );
+
+
+    pickaxe.rotation.z =
+        -.23;
+
+
+    rightArm.add(
+        pickaxe
+    );
+
+
+    /* =====================================================
+       BELT
+    ===================================================== */
+
+    const belt =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                1.05,
+                .17,
+                .82
+            ),
+
+            toon(
+                C.leather
+            )
+
+        );
+
+
+    belt.position.set(
+        0,
+        1.25,
+        0
+    );
+
+
+    root.add(
+        belt
+    );
+
+
+    const buckle =
+        outlined(
+
+            new THREE.BoxGeometry(
+                .25,
+                .23,
+                .08
+            ),
+
+            toon(
+                C.gold
+            ),
+
+            1.09
+
+        );
+
+
+    buckle.position.set(
+        0,
+        1.26,
+        .45
+    );
+
+
+    root.add(
+        buckle
+    );
+
+
+    /* =====================================================
+       BACKPACK
+    ===================================================== */
+
+    const bag =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .45,
+                8,
+                6
+            ),
+
+            toon(
+                C.leather
+            ),
+
+            1.06
+
+        );
+
+
+    bag.scale.set(
+        .9,
+        1.1,
+        .55
+    );
+
+
+    bag.position.set(
+        0,
+        1.55,
+        -.54
+    );
+
+
+    root.add(
+        bag
+    );
+
+
+    /* =====================================================
+       FAKE CARTOON SHADOW
+    ===================================================== */
+
+    const shadow =
+        new THREE.Mesh(
+
+            new THREE.CircleGeometry(
+                .78,
+                14
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0x170f16,
+
+                transparent:
+                    true,
+
+                opacity:
+                    .32,
+
+                depthWrite:
+                    false
+
+            })
+
+        );
+
+
+    shadow.rotation.x =
+        -Math.PI / 2;
+
+
+    shadow.position.y =
+        .025;
+
+
+    root.add(
+        shadow
+    );
+
+
+    root.userData = {
+
+        torso,
+
+        head,
+
+        leftLeg,
+        rightLeg,
+
+        leftArm,
+        rightArm,
+
+        pickaxe,
+
+        shadow
+
+    };
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   LEG
+========================================================= */
+
+function createLeg() {
+
+    const root =
+        new THREE.Group();
+
+
+    const leg =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .16,
+                .19,
+                .58,
+                6
+            ),
+
+            toon(
+                C.leather
+            )
+
+        );
+
+
+    leg.position.y =
+        -.29;
+
+
+    root.add(
+        leg
+    );
+
+
+    const boot =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .31,
+                7,
+                5
+            ),
+
+            toon(
+                C.boots
+            ),
+
+            1.08
+
+        );
+
+
+    boot.scale.set(
+        1,
+        .5,
+        1.5
+    );
+
+
+    boot.position.set(
+        0,
+        -.61,
+        .18
+    );
+
+
+    root.add(
+        boot
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   ARM
+========================================================= */
+
+function createArm() {
+
+    const root =
+        new THREE.Group();
+
+
+    const sleeve =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .17,
+                .21,
+                .67,
+                6
+            ),
+
+            toon(
+                C.greenLight
+            )
+
+        );
+
+
+    sleeve.position.y =
+        -.31;
+
+
+    root.add(
+        sleeve
+    );
+
+
+    const glove =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .21,
+                7,
+                5
+            ),
+
+            toon(
+                C.leatherDark
+            ),
+
+            1.07
+
+        );
+
+
+    glove.position.y =
+        -.67;
+
+
+    root.add(
+        glove
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const gnome =
+    createGnome();
+
+
+scene.add(
+    gnome
+);
+
+
+/* =========================================================
+   ENVIRONMENT
+========================================================= */
+
+const segments =
+    [];
+
+
+/* =========================================================
+   TRACK SEGMENT
+========================================================= */
+
+function createSegment(
+    index
+) {
+
+    const root =
+        new THREE.Group();
+
+
+    root.position.z =
+        index *
+        SEGMENT_LENGTH;
+
+
+    /* =====================================================
+       FLOOR
+    ===================================================== */
+
+    const floor =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                9,
+                .25,
+                SEGMENT_LENGTH
+            ),
+
+            toon(
+                C.floor
+            )
+
+        );
+
+
+    floor.position.y =
+        -.13;
+
+
+    root.add(
+        floor
+    );
+
+
+    /* center path */
+
+    const path =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                7.25,
+                .025,
+                SEGMENT_LENGTH
+            ),
+
+            toon(
+                C.path
+            )
+
+        );
+
+
+    path.position.y =
+        .015;
+
+
+    root.add(
+        path
+    );
+
+
+    /* =====================================================
+       MINE RAILS
+    ===================================================== */
+
+    createRails(
+        root
+    );
+
+
+    /* =====================================================
+       SIDE ROCK WALLS
+    ===================================================== */
+
+    const rockCount =
+        MOBILE
+        ?
+        7
+        :
+        11;
+
+
+    for (
+        let i = 0;
+        i < rockCount;
+        i++
+    ) {
+
+        const side =
+            Math.random() >
+            .5
+            ?
+            1
+            :
+            -1;
+
+
+        const rock =
+            new THREE.Mesh(
+
+                new THREE.DodecahedronGeometry(
+                    .7 +
+                    Math.random() *
+                    .65,
+                    0
+                ),
+
+                toon(
+
+                    [
+                        C.rock,
+                        C.rock2,
+                        C.rockDark
+                    ][
+                        Math.floor(
+                            Math.random() *
+                            3
+                        )
+                    ]
+
+                )
+
+            );
+
+
+        rock.scale.set(
+
+            .8 +
+            Math.random() *
+            .7,
+
+            1 +
+            Math.random() *
+            1.2,
+
+            .7 +
+            Math.random() *
+            .5
+
+        );
+
+
+        rock.position.set(
+
+            side *
+            (
+                4.9 +
+                Math.random() *
+                1.4
+            ),
+
+            .55 +
+            Math.random(),
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            SEGMENT_LENGTH
+
+        );
+
+
+        rock.rotation.set(
+
+            Math.random(),
+
+            Math.random(),
+
+            Math.random()
+
+        );
+
+
+        root.add(
+            rock
+        );
+
+    }
+
+
+    /* =====================================================
+       SMALL FLOOR ROCKS
+    ===================================================== */
+
+    const pebbleCount =
+        MOBILE
+        ?
+        12
+        :
+        22;
+
+
+    for (
+        let i = 0;
+        i < pebbleCount;
+        i++
+    ) {
+
+        const pebble =
+            new THREE.Mesh(
+
+                new THREE.DodecahedronGeometry(
+                    .07 +
+                    Math.random() *
+                    .12,
+                    0
+                ),
+
+                toon(
+                    C.rockDark
+                )
+
+            );
+
+
+        pebble.scale.y =
+            .35 +
+            Math.random() *
+            .4;
+
+
+        pebble.position.set(
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            8.2,
+
+            .08,
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            SEGMENT_LENGTH
+
+        );
+
+
+        root.add(
+            pebble
+        );
+
+    }
+
+
+    /* =====================================================
+       CRYSTALS
+    ===================================================== */
+
+    const crystalCount =
+        MOBILE
+        ?
+        3
+        :
+        5;
+
+
+    for (
+        let i = 0;
+        i < crystalCount;
+        i++
+    ) {
+
+        const crystal =
+            createCrystalCluster();
+
+
+        crystal.position.set(
+
+            (
+                Math.random() >
+                .5
+                ?
+                1
+                :
+                -1
+            )
+            *
+            (
+                4.1 +
+                Math.random() *
+                1.2
+            ),
+
+            0,
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            SEGMENT_LENGTH
+
+        );
+
+
+        root.add(
+            crystal
+        );
+
+    }
+
+
+    /* =====================================================
+       MUSHROOMS
+    ===================================================== */
+
+    for (
+        let i = 0;
+        i < 3;
+        i++
+    ) {
+
+        const mushroom =
+            createMushroom();
+
+
+        mushroom.position.set(
+
+            (
+                Math.random() >
+                .5
+                ?
+                1
+                :
+                -1
+            )
+            *
+            (
+                3.8 +
+                Math.random()
+            ),
+
+            0,
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            SEGMENT_LENGTH
+
+        );
+
+
+        mushroom.rotation.y =
+            Math.random() *
+            Math.PI;
+
+
+        root.add(
+            mushroom
+        );
+
+    }
+
+
+    /* =====================================================
+       SUPPORT BEAM
+    ===================================================== */
+
+    if (
+        index % 2 === 0
+    ) {
+
+        const support =
+            createSupport();
+
+
+        support.position.z =
+            2;
+
+
+        root.add(
+            support
+        );
+
+    }
+
+
+    /* =====================================================
+       RANDOM PROP
+    ===================================================== */
+
+    if (
+        Math.random() >
+        .35
+    ) {
+
+        const prop =
+            Math.random() >
+            .5
+            ?
+            createCrate()
+            :
+            createBarrel();
+
+
+        const side =
+            Math.random() >
+            .5
+            ?
+            1
+            :
+            -1;
+
+
+        prop.position.set(
+
+            side *
+            (
+                3.6 +
+                Math.random() *
+                .6
+            ),
+
+            0,
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            18
+
+        );
+
+
+        root.add(
+            prop
+        );
+
+    }
+
+
+    /* =====================================================
+       SIGN
+    ===================================================== */
+
+    if (
+        Math.random() >
+        .55
+    ) {
+
+        const sign =
+            createSign();
+
+
+        sign.position.set(
+
+            Math.random() >
+            .5
+            ?
+            3.7
+            :
+            -3.7,
+
+            0,
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            16
+
+        );
+
+
+        root.add(
+            sign
+        );
+
+    }
+
+
+    scene.add(
+        root
+    );
+
+
+    segments.push(
+        root
+    );
+
+}
+
+
+/* =========================================================
+   RAILS
+========================================================= */
+
+function createRails(
+    parent
+) {
+
+    const railMaterial =
+        toon(
+            C.metal
+        );
+
+
+    for (
+        const x of [-.72, .72]
+    ) {
+
+        const rail =
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+                    .09,
+                    .055,
+                    SEGMENT_LENGTH
+                ),
+
+                railMaterial
+
+            );
+
+
+        rail.position.set(
+            x,
+            .09,
+            0
+        );
+
+
+        parent.add(
+            rail
+        );
+
+    }
+
+
+    const sleeperCount =
+        12;
+
+
+    for (
+        let i = 0;
+        i < sleeperCount;
+        i++
+    ) {
+
+        const sleeper =
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+                    2,
+                    .08,
+                    .25
+                ),
+
+                toon(
+                    C.woodDark
+                )
+
+            );
+
+
+        sleeper.position.set(
+
+            0,
+
+            .055,
+
+            -SEGMENT_LENGTH / 2 +
+            i *
+            (
+                SEGMENT_LENGTH /
+                sleeperCount
+            )
+
+        );
+
+
+        parent.add(
+            sleeper
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CRYSTAL
+========================================================= */
+
+function createCrystalCluster() {
+
+    const root =
+        new THREE.Group();
+
+
+    const count =
+        2 +
+        Math.floor(
+            Math.random() *
+            3
+        );
+
+
+    for (
+        let i = 0;
+        i < count;
+        i++
+    ) {
+
+        const crystal =
+            outlined(
+
+                new THREE.OctahedronGeometry(
+                    .20 +
+                    Math.random() *
+                    .18,
+                    0
+                ),
+
+                toon(
+                    Math.random() >
+                    .45
+                    ?
+                    C.purple
+                    :
+                    C.purpleDark
+                ),
+
+                1.05
+
+            );
+
+
+        crystal.scale.y =
+            1.4 +
+            Math.random() *
+            1.4;
+
+
+        crystal.position.set(
+
+            (
+                i -
+                count / 2
+            )
+            *
+            .25,
+
+            .25,
+
+            Math.random() *
+            .20
+
+        );
+
+
+        crystal.rotation.z =
+            (
+                Math.random() -
+                .5
+            )
+            *
+            .35;
+
+
+        root.add(
+            crystal
+        );
+
+    }
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   MUSHROOM
+========================================================= */
+
+function createMushroom() {
+
+    const root =
+        new THREE.Group();
+
+
+    const stem =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .055,
+                .08,
+                .33,
+                6
+            ),
+
+            toon(
+                C.mushroomLight
+            )
+
+        );
+
+
+    stem.position.y =
+        .16;
+
+
+    root.add(
+        stem
+    );
+
+
+    const cap =
+        outlined(
+
+            new THREE.SphereGeometry(
+                .18,
+                7,
+                5
+            ),
+
+            toon(
+                C.mushroom
+            ),
+
+            1.07
+
+        );
+
+
+    cap.scale.set(
+        1.2,
+        .45,
+        1
+    );
+
+
+    cap.position.y =
+        .35;
+
+
+    root.add(
+        cap
+    );
+
+
+    root.scale.setScalar(
+        .8 +
+        Math.random() *
+        .6
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   WOOD SUPPORT
+========================================================= */
+
+function createSupport() {
+
+    const root =
+        new THREE.Group();
+
+
+    const material =
+        toon(
+            C.wood
+        );
+
+
+    const left =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .36,
+                4.8,
+                .42
+            ),
+
+            material
+
+        );
+
+
+    left.position.set(
+        -4,
+        2.35,
+        0
+    );
+
+
+    left.rotation.z =
+        -.015;
+
+
+    root.add(
+        left
+    );
+
+
+    const right =
+        left.clone();
+
+
+    right.position.x =
+        4;
+
+
+    right.rotation.z =
+        .015;
+
+
+    root.add(
+        right
+    );
+
+
+    const top =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                8.35,
+                .40,
+                .42
+            ),
+
+            material
+
+        );
+
+
+    top.position.y =
+        4.60;
+
+
+    top.rotation.z =
+        .012;
+
+
+    root.add(
+        top
+    );
+
+
+    /* hanging cable */
+
+    const rope =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .018,
+                .018,
+                .48,
+                5
+            ),
+
+            toon(
+                C.ink
+            )
+
+        );
+
+
+    rope.position.y =
+        4.25;
+
+
+    root.add(
+        rope
+    );
+
+
+    /* lantern */
+
+    const lanternBody =
+        outlined(
+
+            new THREE.BoxGeometry(
+                .25,
+                .32,
+                .19
+            ),
+
+            toon(
+                C.woodDark
+            ),
+
+            1.07
+
+        );
+
+
+    lanternBody.position.y =
+        3.92;
+
+
+    root.add(
+        lanternBody
+    );
+
+
+    const light =
+        new THREE.Mesh(
+
+            new THREE.CircleGeometry(
+                .075,
+                7
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0xffd66b
+
+            })
+
+        );
+
+
+    light.position.set(
+        0,
+        3.92,
+        -.105
+    );
+
+
+    light.rotation.y =
+        Math.PI;
+
+
+    root.add(
+        light
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   CRATE
+========================================================= */
+
+function createCrate() {
+
+    const root =
+        outlined(
+
+            new THREE.BoxGeometry(
+                .72,
+                .65,
+                .72
+            ),
+
+            toon(
+                C.wood
+            ),
+
+            1.04
+
+        );
+
+
+    root.position.y =
+        .34;
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   BARREL
+========================================================= */
+
+function createBarrel() {
+
+    const root =
+        new THREE.Group();
+
+
+    const barrel =
+        outlined(
+
+            new THREE.CylinderGeometry(
+                .33,
+                .38,
+                .75,
+                8
+            ),
+
+            toon(
+                C.wood
+            ),
+
+            1.04
+
+        );
+
+
+    barrel.position.y =
+        .39;
+
+
+    root.add(
+        barrel
+    );
+
+
+    for (
+        const y of [.18, .60]
+    ) {
+
+        const band =
+            new THREE.Mesh(
+
+                new THREE.TorusGeometry(
+                    .35,
+                    .025,
+                    5,
+                    8
+                ),
+
+                toon(
+                    C.metal
+                )
+
+            );
+
+
+        band.rotation.x =
+            Math.PI / 2;
+
+
+        band.position.y =
+            y;
+
+
+        root.add(
+            band
+        );
+
+    }
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   SIGN
+========================================================= */
+
+function createSign() {
+
+    const root =
+        new THREE.Group();
+
+
+    const pole =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .13,
+                1.30,
+                .13
+            ),
+
+            toon(
+                C.woodDark
+            )
+
+        );
+
+
+    pole.position.y =
+        .65;
+
+
+    root.add(
+        pole
+    );
+
+
+    const board =
+        outlined(
+
+            new THREE.BoxGeometry(
+                .85,
+                .38,
+                .10
+            ),
+
+            toon(
+                C.wood
+            ),
+
+            1.05
+
+        );
+
+
+    board.position.set(
+        .22,
+        1.15,
+        0
+    );
+
+
+    board.rotation.z =
+        -.08;
+
+
+    root.add(
+        board
+    );
+
+
+    /* fake painted arrow */
+
+    const arrow =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .38,
+                .045,
+                .025
+            ),
+
+            toon(
+                C.goldLight
+            )
+
+        );
+
+
+    arrow.position.set(
+        .15,
+        1.16,
+        -.065
+    );
+
+
+    arrow.rotation.y =
+        Math.PI;
+
+
+    root.add(
+        arrow
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   CREATE SEGMENTS
+========================================================= */
+
+for (
+    let i = 0;
+    i < SEGMENT_COUNT;
+    i++
+) {
+
+    createSegment(
+        i
+    );
+
+}
+
+
+/* =========================================================
+   OBJECT POOLS
+========================================================= */
+
+const goldPool =
+    [];
+
+
+const obstaclePool =
+    [];
+
+
+const GOLD_COUNT =
+    MOBILE
+    ?
+    24
+    :
+    34;
+
+
+const OBSTACLE_COUNT =
+    MOBILE
+    ?
+    10
+    :
+    15;
+
+
+/* =========================================================
+   GOLD
+========================================================= */
+
+function createGold() {
+
+    const root =
+        new THREE.Group();
+
+
+    const nugget =
+        outlined(
+
+            new THREE.IcosahedronGeometry(
+                .27,
+                0
+            ),
+
+            toon(
+                C.goldLight
+            ),
+
+            1.10
+
+        );
+
+
+    nugget.scale.set(
+        1.20,
+        .78,
+        .90
+    );
+
+
+    root.add(
+        nugget
+    );
+
+
+    /* tiny sparkle */
+
+    const sparkle =
+        new THREE.Mesh(
+
+            new THREE.CircleGeometry(
+                .045,
+                4
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0xffffd8
+
+            })
+
+        );
+
+
+    sparkle.position.set(
+        -.08,
+        .12,
+        -.28
+    );
+
+
+    sparkle.rotation.y =
+        Math.PI;
+
+
+    root.add(
+        sparkle
+    );
+
+
+    root.userData.active =
+        false;
+
+
+    root.visible =
+        false;
+
+
+    scene.add(
+        root
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   OBSTACLE
+========================================================= */
+
+function createObstacle() {
+
+    const root =
+        new THREE.Group();
+
+
+    const rock =
+        outlined(
+
+            new THREE.DodecahedronGeometry(
+                .64,
+                0
+            ),
+
+            toon(
+                C.rockDark
+            ),
+
+            1.07
+
+        );
+
+
+    rock.scale.set(
+        1.1,
+        .75,
+        .95
+    );
+
+
+    rock.position.y =
+        .48;
+
+
+    root.add(
+        rock
+    );
+
+
+    /* detail crack */
+
+    const crack =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .025,
+                .28,
+                .02
+            ),
+
+            toon(
+                C.ink
+            )
+
+        );
+
+
+    crack.position.set(
+        .05,
+        .62,
+        -.60
+    );
+
+
+    crack.rotation.z =
+        -.4;
+
+
+    root.add(
+        crack
+    );
+
+
+    root.userData.active =
+        false;
+
+
+    root.visible =
+        false;
+
+
+    scene.add(
+        root
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   CREATE POOLS
+========================================================= */
+
+for (
+    let i = 0;
+    i < GOLD_COUNT;
+    i++
+) {
+
+    goldPool.push(
+        createGold()
+    );
+
+}
+
+
+for (
+    let i = 0;
+    i < OBSTACLE_COUNT;
+    i++
+) {
+
+    obstaclePool.push(
+        createObstacle()
+    );
+
+}
+
+
+/* =========================================================
+   POOL HELPERS
+========================================================= */
+
+function getFree(
+    pool
+) {
+
+    return pool.find(
+        item =>
+            !item.userData.active
+    );
+
+}
+
+
+function disable(
+    object
+) {
+
+    object.userData.active =
+        false;
+
+
+    object.visible =
+        false;
+
+}
+
+
+/* =========================================================
+   SPAWN GOLD
+========================================================= */
+
+function spawnGold(
+    lane,
+    z,
+    y = .78
+) {
+
+    const object =
+        getFree(
+            goldPool
+        );
+
+
+    if (!object)
+        return;
+
+
+    object.userData.active =
+        true;
+
+
+    object.visible =
+        true;
+
+
+    object.position.set(
+
+        LANES[lane],
+
+        y,
+
+        z
+
+    );
+
+
+    object.rotation.set(
+
+        Math.random(),
+
+        Math.random(),
+
+        Math.random()
+
+    );
+
+}
+
+
+/* =========================================================
+   SPAWN OBSTACLE
+========================================================= */
+
+function spawnObstacle(
+    lane,
+    z
+) {
+
+    const object =
+        getFree(
+            obstaclePool
+        );
+
+
+    if (!object)
+        return;
+
+
+    object.userData.active =
+        true;
+
+
+    object.visible =
+        true;
+
+
+    object.position.set(
+
+        LANES[lane],
+
+        0,
+
+        z
+
+    );
+
+
+    object.rotation.y =
+        Math.random() *
+        Math.PI;
+
+}
+
+
+/* =========================================================
+   PATTERNS
+========================================================= */
+
+let nextSpawnZ =
+    18;
+
+
+function spawnPattern(
+    difficulty
+) {
+
+    const roll =
+        Math.random();
+
+
+    /* =====================================================
+       GOLD LINE
+    ===================================================== */
+
+    if (
+        roll <
+        .40
+    ) {
+
+        const lane =
+            Math.floor(
+                Math.random() *
+                3
+            );
+
+
+        for (
+            let i = 0;
+            i < 5;
+            i++
+        ) {
+
+            spawnGold(
+
+                lane,
+
+                nextSpawnZ +
+                i *
+                1.35,
+
+                .85 +
+                Math.sin(
+                    i *
+                    .9
+                )
+                *
+                .10
+
+            );
+
+        }
+
+
+        nextSpawnZ +=
+            8;
+
+    }
+
+
+    /* =====================================================
+       ROCK + SAFE LANE
+    ===================================================== */
+
+    else if (
+        roll <
+        .78
+    ) {
+
+        const blocked =
+            Math.floor(
+                Math.random() *
+                3
+            );
+
+
+        spawnObstacle(
+            blocked,
+            nextSpawnZ
+        );
+
+
+        const safeLanes =
+            [0,1,2]
+            .filter(
+                lane =>
+                    lane !==
+                    blocked
+            );
+
+
+        const safe =
+            safeLanes[
+                Math.floor(
+                    Math.random() *
+                    safeLanes.length
+                )
+            ];
+
+
+        spawnGold(
+            safe,
+            nextSpawnZ,
+            .85
+        );
+
+
+        spawnGold(
+            safe,
+            nextSpawnZ + 1.4,
+            .85
+        );
+
+
+        nextSpawnZ +=
+
+            6.8 -
+            difficulty *
+            1.1;
+
+    }
+
+
+    /* =====================================================
+       TWO BLOCKED LANES
+    ===================================================== */
+
+    else {
+
+        const safe =
+            Math.floor(
+                Math.random() *
+                3
+            );
+
+
+        for (
+            let lane = 0;
+            lane < 3;
+            lane++
+        ) {
+
+            if (
+                lane !==
+                safe
+            ) {
+
+                spawnObstacle(
+                    lane,
+                    nextSpawnZ
+                );
+
+            }
+
+        }
+
+
+        spawnGold(
+            safe,
+            nextSpawnZ,
+            .85
+        );
+
+
+        spawnGold(
+            safe,
+            nextSpawnZ + 1.35,
+            .85
+        );
+
+
+        nextSpawnZ +=
+
+            7.3 -
+            difficulty *
+            1.2;
+
+    }
+
+}
+
+
+/* =========================================================
+   STATE
+========================================================= */
+
+let gameRunning =
+    false;
+
+
+let playerZ =
+    0;
+
+
+let targetLane =
+    1;
+
+
+let jumpY =
+    0;
+
+
+let velocityY =
+    0;
+
+
+let grounded =
+    true;
+
+
+let speed =
+    BASE_SPEED;
+
+
+let elapsed =
+    0;
+
+
+let distance =
+    0;
+
+
+let score =
+    0;
+
+
+let gold =
+    0;
+
+
+let runPhase =
+    0;
+
+
+/* =========================================================
+   UI
+========================================================= */
+
+const distanceEl =
+    document.getElementById(
+        "distance"
+    );
+
+
+const goldEl =
+    document.getElementById(
+        "gold"
+    );
+
+
+const scoreEl =
+    document.getElementById(
+        "score"
+    );
+
+
+const speedEl =
+    document.getElementById(
+        "speed"
+    );
+
+
+const startScreen =
+    document.getElementById(
+        "startScreen"
+    );
+
+
+const gameOver =
+    document.getElementById(
+        "gameOver"
+    );
+
+
+const leaderboardScreen =
+    document.getElementById(
+        "leaderboardScreen"
+    );
+
+
+/* =========================================================
+   CONTROLS
+
+   targetLane 0 = LEFT SIDE OF SCREEN
+   targetLane 2 = RIGHT SIDE OF SCREEN
+
+   LANES уже содержит правильный X.
+========================================================= */
+
+function moveLeft() {
+
+    if (!gameRunning)
+        return;
+
+
+    targetLane =
+        Math.max(
+            0,
+            targetLane - 1
+        );
+
+}
+
+
+function moveRight() {
+
+    if (!gameRunning)
+        return;
+
+
+    targetLane =
+        Math.min(
+            2,
+            targetLane + 1
+        );
+
+}
+
+
+function jump() {
+
+    if (
+        !gameRunning ||
+        !grounded
+    )
+        return;
+
+
+    velocityY =
+        7;
+
+
+    grounded =
+        false;
+
+}
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+addEventListener(
+    "keydown",
+    event => {
+
+        if (
+
+            event.code ===
+            "ArrowLeft"
+
+            ||
+
+            event.code ===
+            "KeyA"
+
+        ) {
+
+            moveLeft();
+
+        }
+
+
+        else if (
+
+            event.code ===
+            "ArrowRight"
+
+            ||
+
+            event.code ===
+            "KeyD"
+
+        ) {
+
+            moveRight();
+
+        }
+
+
+        else if (
+
+            event.code ===
+            "Space"
+
+            ||
+
+            event.code ===
+            "ArrowUp"
+
+        ) {
+
+            event.preventDefault();
+
+            jump();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   MOBILE BUTTONS
+========================================================= */
+
+document
+.getElementById(
+    "leftButton"
+)
+.addEventListener(
+    "pointerdown",
+    moveLeft
+);
+
+
+document
+.getElementById(
+    "rightButton"
+)
+.addEventListener(
+    "pointerdown",
+    moveRight
+);
+
+
+document
+.getElementById(
+    "jumpButton"
+)
+.addEventListener(
+    "pointerdown",
+    jump
+);
+
+
+/* =========================================================
+   SWIPES
+========================================================= */
+
+let touchStartX =
+    0;
+
+
+let touchStartY =
+    0;
+
+
+renderer.domElement
+.addEventListener(
+    "pointerdown",
+    event => {
+
+        touchStartX =
+            event.clientX;
+
+
+        touchStartY =
+            event.clientY;
+
+    }
+);
+
+
+renderer.domElement
+.addEventListener(
+    "pointerup",
+    event => {
+
+        if (!gameRunning)
+            return;
+
+
+        const dx =
+            event.clientX -
+            touchStartX;
+
+
+        const dy =
+            event.clientY -
+            touchStartY;
+
+
+        if (
+
+            Math.abs(dx) <
+            35
+
+            &&
+
+            Math.abs(dy) <
+            35
+
+        )
+            return;
+
+
+        if (
+
+            Math.abs(dx) >
+            Math.abs(dy)
+
+        ) {
+
+            if (
+                dx < 0
+            ) {
+
+                moveLeft();
+
+            }
+
+            else {
+
+                moveRight();
+
+            }
+
+        }
+
+
+        else if (
+            dy < 0
+        ) {
+
+            jump();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function resetPools() {
+
+    [
+        ...goldPool,
+        ...obstaclePool
+    ]
+    .forEach(
+        disable
+    );
+
+}
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function startGame() {
+
+    resetPools();
+
+
+    playerZ =
+        0;
+
+
+    targetLane =
+        1;
+
+
+    jumpY =
+        0;
+
+
+    velocityY =
+        0;
+
+
+    grounded =
+        true;
+
+
+    speed =
+        BASE_SPEED;
+
+
+    elapsed =
+        0;
+
+
+    distance =
+        0;
+
+
+    score =
+        0;
+
+
+    gold =
+        0;
+
+
+    runPhase =
+        0;
+
+
+    nextSpawnZ =
+        18;
+
+
+    gnome.position.set(
+        0,
+        0,
+        0
+    );
+
+
+    camera.position.set(
+        0,
+        4.6,
+        -8.5
+    );
+
+
+    for (
+        let i = 0;
+        i < segments.length;
+        i++
+    ) {
+
+        segments[i]
+            .position.z =
+            i *
+            SEGMENT_LENGTH;
+
+    }
+
+
+    startScreen
+    .classList
+    .add(
+        "hidden"
+    );
+
+
+    gameOver
+    .classList
+    .add(
+        "hidden"
+    );
+
+
+    leaderboardScreen
+    .classList
+    .add(
+        "hidden"
+    );
+
+
+    gameRunning =
+        true;
+
+}
+
+
+/* =========================================================
+   END GAME
+========================================================= */
+
+function endGame() {
+
+    if (!gameRunning)
+        return;
+
+
+    gameRunning =
+        false;
+
+
+    document
+    .getElementById(
+        "finalScore"
+    )
+    .textContent =
+        Math.floor(
+            score
+        );
+
+
+    document
+    .getElementById(
+        "finalGold"
+    )
+    .textContent =
+        gold;
+
+
+    document
+    .getElementById(
+        "walletInput"
+    )
+    .value =
+        "";
+
+
+    document
+    .getElementById(
+        "walletError"
+    )
+    .textContent =
+        "";
+
+
+    gameOver
+    .classList
+    .remove(
+        "hidden"
+    );
+
+}
+
+
+/* =========================================================
+   PROCESS POOL
+========================================================= */
+
+function processObjects(
+
+    pool,
+
+    type,
+
+    delta
+
+) {
+
+    for (
+        const object
+        of pool
+    ) {
+
+        if (
+            !object.userData.active
+        )
+            continue;
+
+
+        const dz =
+            object.position.z -
+            playerZ;
+
+
+        if (
+            type ===
+            "gold"
+        ) {
+
+            object.rotation.y +=
+                delta *
+                3.2;
+
+
+            object.rotation.x +=
+                delta *
+                1.1;
+
+        }
+
+
+        if (
+
+            Math.abs(dz) <
+            .62
+
+            &&
+
+            Math.abs(
+
+                object.position.x -
+                gnome.position.x
+
+            )
+            <
+            .58
+
+        ) {
+
+            if (
+                type ===
+                "gold"
+            ) {
+
+                gold++;
+
+
+                score +=
+                    100;
+
+
+                disable(
+                    object
+                );
+
+
+                continue;
+
+            }
+
+
+            if (
+                jumpY <
+                .62
+            ) {
+
+                endGame();
+
+                return;
+
+            }
+
+        }
+
+
+        if (
+
+            object.position.z <
+            playerZ -
+            10
+
+        ) {
+
+            disable(
+                object
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   RUN ANIMATION
+========================================================= */
+
+function animateGnome(
+    delta
+) {
+
+    runPhase +=
+
+        delta *
+        (
+            8 +
+            speed *
+            .48
+        );
+
+
+    const swing =
+        Math.sin(
+            runPhase
+        );
+
+
+    const opposite =
+        Math.sin(
+            runPhase +
+            Math.PI
+        );
+
+
+    const data =
+        gnome.userData;
+
+
+    if (
+        grounded
+    ) {
+
+        data.leftLeg.rotation.x =
+            swing *
+            .72;
+
+
+        data.rightLeg.rotation.x =
+            opposite *
+            .72;
+
+
+        data.leftArm.rotation.x =
+            opposite *
+            .50;
+
+
+        data.rightArm.rotation.x =
+            swing *
+            .46;
+
+
+        /* old animation wobble */
+
+        data.head.rotation.z =
+            -swing *
+            .035;
+
+
+        data.head.rotation.y =
+            swing *
+            .028;
+
+
+        data.torso.rotation.z =
+            swing *
+            .045;
+
+
+        data.pickaxe.rotation.z =
+            -.23 +
+            swing *
+            .15;
+
+    }
+
+    else {
+
+        data.leftLeg.rotation.x =
+            -.35;
+
+
+        data.rightLeg.rotation.x =
+            .32;
+
+
+        data.leftArm.rotation.x =
+            -.35;
+
+
+        data.rightArm.rotation.x =
+            -.46;
+
+    }
+
+
+    /* =====================================================
+       SQUASH & STRETCH
+
+       Чуть преувеличено специально.
+    ===================================================== */
+
+    if (
+        grounded
+    ) {
+
+        const bounce =
+            Math.abs(
+                Math.sin(
+                    runPhase
+                )
+            );
+
+
+        gnome.scale.y =
+            .72 *
+            (
+                1 +
+                bounce *
+                .028
+            );
+
+
+        gnome.scale.x =
+            .72 *
+            (
+                1 -
+                bounce *
+                .018
+            );
+
+
+        gnome.scale.z =
+            .72;
+
+    }
+
+}
+
+
+/* =========================================================
+   RECYCLE SEGMENTS
+========================================================= */
+
+function recycleSegments() {
+
+    let farthest =
+        -Infinity;
+
+
+    for (
+        const segment
+        of segments
+    ) {
+
+        farthest =
+            Math.max(
+
+                farthest,
+
+                segment.position.z
+
+            );
+
+    }
+
+
+    for (
+        const segment
+        of segments
+    ) {
+
+        if (
+
+            segment.position.z +
+            SEGMENT_LENGTH
+
+            <
+
+            playerZ -
+            SEGMENT_LENGTH
+
+        ) {
+
+            segment.position.z =
+                farthest +
+                SEGMENT_LENGTH;
+
+
+            farthest =
+                segment.position.z;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   WALLET
+========================================================= */
+
+function validWallet(
+    address
+) {
+
+    return /^0x[a-fA-F0-9]{40}$/
+        .test(
+            address
+        );
+
+}
+
+
+/* =========================================================
+   LEADERBOARD SAVE
+========================================================= */
+
+function saveLeaderboard(
+
+    wallet,
+
+    currentScore,
+
+    currentGold
+
+) {
+
+    const key =
+        "gnomeRunnerVintage";
+
+
+    let data =
+        JSON.parse(
+
+            localStorage
+            .getItem(
+                key
+            )
+
+            ||
+
+            "[]"
+
+        );
+
+
+    wallet =
+        wallet.toLowerCase();
+
+
+    const existing =
+        data.find(
+
+            player =>
+                player.wallet ===
+                wallet
+
+        );
+
+
+    if (
+        existing
+    ) {
+
+        if (
+            currentScore >
+            existing.score
+        ) {
+
+            existing.score =
+                currentScore;
+
+
+            existing.gold =
+                currentGold;
+
+        }
+
+    }
+
+    else {
+
+        data.push({
+
+            wallet,
+
+            score:
+                currentScore,
+
+            gold:
+                currentGold
+
+        });
+
+    }
+
+
+    data.sort(
+        (a,b) =>
+            b.score -
+            a.score
+    );
+
+
+    data =
+        data.slice(
+            0,
+            20
+        );
+
+
+    localStorage
+    .setItem(
+
+        key,
+
+        JSON.stringify(
+            data
+        )
+
+    );
+
+}
+
+
+/* =========================================================
+   DISPLAY LEADERBOARD
+========================================================= */
+
+function showLeaderboard() {
+
+    const container =
+        document
+        .getElementById(
+            "leaderboard"
+        );
+
+
+    container.innerHTML =
+        "";
+
+
+    const data =
+        JSON.parse(
+
+            localStorage
+            .getItem(
+                "gnomeRunnerVintage"
+            )
+
+            ||
+
+            "[]"
+
+        );
+
+
+    if (
+        !data.length
+    ) {
+
+        container.innerHTML =
+        `
+        <p class="description">
+            Тут пока ни одного шахтёра.
+            Подозрительно безопасное место.
+        </p>
+        `;
+
+
+        return;
+
+    }
+
+
+    data.forEach(
+        (
+            player,
+            index
+        ) => {
+
+            const row =
+                document
+                .createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "leaderRow";
+
+
+            let rank =
+                "#" +
+                (
+                    index +
+                    1
+                );
+
+
+            if (
+                index === 0
+            )
+                rank =
+                    "🥇";
+
+
+            if (
+                index === 1
+            )
+                rank =
+                    "🥈";
+
+
+            if (
+                index === 2
+            )
+                rank =
+                    "🥉";
+
+
+            const wallet =
+                player.wallet.slice(
+                    0,
+                    6
+                )
+                +
+                "..."
+                +
+                player.wallet.slice(
+                    -4
+                );
+
+
+            row.innerHTML =
+            `
+
+                <div>
+                    ${rank}
+                </div>
+
+                <div class="wallet">
+                    ${wallet}
+                </div>
+
+                <div class="leaderScore">
+                    ${player.score}
+                </div>
+
+            `;
+
+
+            container.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   UI
+========================================================= */
+
+document
+.getElementById(
+    "startButton"
+)
+.onclick =
+    startGame;
+
+
+document
+.getElementById(
+    "restartButton"
+)
+.onclick =
+    startGame;
+
+
+document
+.getElementById(
+    "showLeaderboardStart"
+)
+.onclick =
+() => {
+
+    startScreen
+    .classList
+    .add(
+        "hidden"
+    );
+
+
+    showLeaderboard();
+
+
+    leaderboardScreen
+    .classList
+    .remove(
+        "hidden"
+    );
+
+};
+
+
+document
+.getElementById(
+    "closeLeaderboard"
+)
+.onclick =
+() => {
+
+    leaderboardScreen
+    .classList
+    .add(
+        "hidden"
+    );
+
+
+    startScreen
+    .classList
+    .remove(
+        "hidden"
+    );
+
+};
+
+
+document
+.getElementById(
+    "saveScore"
+)
+.onclick =
+() => {
+
+    const wallet =
+        document
+        .getElementById(
+            "walletInput"
+        )
+        .value
+        .trim();
+
+
+    const error =
+        document
+        .getElementById(
+            "walletError"
+        );
+
+
+    if (
+        !validWallet(
+            wallet
+        )
+    ) {
+
+        error.textContent =
+            "Нужен корректный EVM-адрес: 0x + 40 hex-символов.";
+
+
+        return;
+
+    }
+
+
+    saveLeaderboard(
+
+        wallet,
+
+        Math.floor(
+            score
+        ),
+
+        gold
+
+    );
+
+
+    gameOver
+    .classList
+    .add(
+        "hidden"
+    );
+
+
+    showLeaderboard();
+
+
+    leaderboardScreen
+    .classList
+    .remove(
+        "hidden"
+    );
+
+};
+
+
+/* =========================================================
+   LOOP
+========================================================= */
+
+const clock =
+    new THREE.Clock();
+
+
+function loop() {
+
+    requestAnimationFrame(
+        loop
+    );
+
+
+    const delta =
+        Math.min(
+            clock.getDelta(),
+            .033
+        );
+
+
+    if (
+        gameRunning
+    ) {
+
+        elapsed +=
+            delta;
+
+
+        const difficulty =
+            Math.min(
+                1,
+                elapsed /
+                100
+            );
+
+
+        /* =================================================
+           DIFFICULTY
+        ================================================= */
+
+        speed =
+            Math.min(
+
+                MAX_SPEED,
+
+                BASE_SPEED +
+                elapsed *
+                .13
+
+            );
+
+
+        /* =================================================
+           ACTUAL FORWARD MOVEMENT
+        ================================================= */
+
+        playerZ +=
+            speed *
+            delta;
+
+
+        gnome.position.z =
+            playerZ;
+
+
+        distance =
+            Math.floor(
+                playerZ
+            );
+
+
+        score +=
+            speed *
+            delta *
+            2;
+
+
+        /* =================================================
+           LANE CHANGE
+
+           Исправленная ориентация.
+        ================================================= */
+
+        const desiredX =
+            LANES[
+                targetLane
+            ];
+
+
+        gnome.position.x +=
+
+            (
+                desiredX -
+                gnome.position.x
+            )
+
+            *
+
+            Math.min(
+                1,
+                delta *
+                12
+            );
+
+
+        const laneDifference =
+            desiredX -
+            gnome.position.x;
+
+
+        /* lean in SCREEN direction */
+
+        gnome.rotation.z =
+            THREE.MathUtils.lerp(
+
+                gnome.rotation.z,
+
+                laneDifference *
+                .05,
+
+                delta *
+                7
+
+            );
+
+
+        /* =================================================
+           JUMP
+        ================================================= */
+
+        velocityY -=
+            18 *
+            delta;
+
+
+        jumpY +=
+            velocityY *
+            delta;
+
+
+        if (
+            jumpY <=
+            0
+        ) {
+
+            jumpY =
+                0;
+
+
+            velocityY =
+                0;
+
+
+            grounded =
+                true;
+
+        }
+
+
+        const runningBob =
+            grounded
+            ?
+            Math.abs(
+                Math.sin(
+                    runPhase
+                )
+            )
+            *
+            .035
+            :
+            0;
+
+
+        gnome.position.y =
+            jumpY +
+            runningBob;
+
+
+        animateGnome(
+            delta
+        );
+
+
+        /* =================================================
+           SPAWN
+        ================================================= */
+
+        while (
+
+            nextSpawnZ <
+            playerZ +
+            58
+
+        ) {
+
+            spawnPattern(
+                difficulty
+            );
+
+        }
+
+
+        /* =================================================
+           COLLISION
+        ================================================= */
+
+        processObjects(
+
+            goldPool,
+
+            "gold",
+
+            delta
+
+        );
+
+
+        processObjects(
+
+            obstaclePool,
+
+            "obstacle",
+
+            delta
+
+        );
+
+
+        /* =================================================
+           ENVIRONMENT
+        ================================================= */
+
+        recycleSegments();
+
+
+        /* =================================================
+           CAMERA
+        ================================================= */
+
+        camera.position.x =
+            THREE.MathUtils.lerp(
+
+                camera.position.x,
+
+                gnome.position.x *
+                .12,
+
+                delta *
+                3.5
+
+            );
+
+
+        camera.position.y =
+            THREE.MathUtils.lerp(
+
+                camera.position.y,
+
+                4.25 +
+                jumpY *
+                .10,
+
+                delta *
+                4
+
+            );
+
+
+        camera.position.z =
+            THREE.MathUtils.lerp(
+
+                camera.position.z,
+
+                playerZ -
+                8.8,
+
+                delta *
+                7
+
+            );
+
+
+        camera.lookAt(
+
+            gnome.position.x *
+            .06,
+
+            1.25 +
+            jumpY *
+            .08,
+
+            playerZ +
+            10
+
+        );
+
+
+        /* =================================================
+           HUD
+        ================================================= */
+
+        distanceEl.textContent =
+            distance +
+            " m";
+
+
+        goldEl.textContent =
+            gold;
+
+
+        scoreEl.textContent =
+            Math.floor(
+                score
+            );
+
+
+        speedEl.textContent =
+
+            (
+                speed /
+                BASE_SPEED
+            )
+            .toFixed(
+                1
+            )
+            +
+            "x";
+
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+loop();
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+addEventListener(
+    "resize",
+    () => {
+
+        camera.aspect =
+            innerWidth /
+            innerHeight;
+
+
+        camera
+        .updateProjectionMatrix();
+
+
+        renderer
+        .setSize(
+            innerWidth,
+            innerHeight
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gnome Gold Runner</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #080b10;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #hud {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      background: rgba(0,0,0,.55);
+      border: 1px solid rgba(255,215,0,.35);
+      border-radius: 14px;
+      padding: 14px 18px;
+      min-width: 190px;
+      backdrop-filter: blur(8px);
+    }
+
+    #hud div {
+      margin: 4px 0;
+      font-size: 18px;
+    }
+
+    .gold {
+      color: #ffd84c;
+      font-weight: bold;
+    }
+
+    #instructions {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+
+      padding: 9px 16px;
+      border-radius: 12px;
+
+      background: rgba(0,0,0,.55);
+      color: #ddd;
+
+      font-size: 14px;
+    }
+
+    #gameOver,
+    #startScreen,
+    #leaderboardScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: rgba(0,0,0,.76);
+      backdrop-filter: blur(7px);
+    }
+
+    .panel {
+      width: min(520px, 92vw);
+
+      background: linear-gradient(
+        180deg,
+        rgba(35,31,23,.97),
+        rgba(13,14,18,.98)
+      );
+
+      border: 1px solid #725c26;
+      border-radius: 20px;
+
+      padding: 30px;
+
+      box-shadow:
+        0 20px 70px rgba(0,0,0,.65),
+        inset 0 0 35px rgba(255,196,40,.04);
+
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 38px;
+      color: #ffd65b;
+    }
+
+    h2 {
+      color: #ffd65b;
+    }
+
+    .subtitle {
+      color: #aaa;
+      line-height: 1.5;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+
+      padding: 13px 22px;
+      margin: 8px;
+
+      font-size: 17px;
+      font-weight: bold;
+
+      cursor: pointer;
+
+      background: linear-gradient(#ffdd67,#d59d16);
+      color: #1b1406;
+
+      transition: .15s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      margin-top: 15px;
+
+      border-radius: 10px;
+      border: 1px solid #666;
+
+      background: #111;
+      color: white;
+
+      font-family: monospace;
+      font-size: 15px;
+    }
+
+    #walletError {
+      min-height: 22px;
+      color: #ff6666;
+      margin-top: 8px;
+    }
+
+    #leaderboard {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .leaderRow {
+      display: grid;
+      grid-template-columns: 35px 1fr 90px;
+      gap: 8px;
+
+      padding: 10px;
+
+      border-bottom: 1px solid #333;
+    }
+
+    .leaderWallet {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #ccc;
+      font-family: monospace;
+    }
+
+    .leaderScore {
+      text-align: right;
+      color: #ffd65b;
+      font-weight: bold;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="hud">
+  <div>Очки: <span id="score">0</span></div>
+  <div>Золото: <span id="gold" class="gold">0</span> 🟡</div>
+  <div>Скорость: <span id="speed">1.0</span>x</div>
+</div>
+
+<div id="instructions">
+  ← → / A D — движение · SPACE / ↑ — прыжок
+</div>
+
+<div id="startScreen">
+  <div class="panel">
+    <h1>⛏ GNOME RUNNER</h1>
+
+    <p class="subtitle">
+      Гном отправился в шахту за золотом.
+      Проблема лишь в том, что шахта почему-то бесконечная.
+      Видимо, проектировал её блокчейн-разработчик.
+    </p>
+
+    <button id="startButton">НАЧАТЬ ЗАБЕГ</button>
+    <button id="showLeaderboardStart">ТАБЛИЦА ЛИДЕРОВ</button>
+  </div>
+</div>
+
+<div id="gameOver" class="hidden">
+  <div class="panel">
+
+    <h1>GAME OVER</h1>
+
+    <h2>
+      Результат:
+      <span id="finalScore">0</span>
+    </h2>
+
+    <p>
+      Собрано золота:
+      <span id="finalGold">0</span>
+    </p>
+
+    <p class="subtitle">
+      Введите EVM-адрес для сохранения результата.
+    </p>
+
+    <input
+      id="walletInput"
+      placeholder="0x1234...abcd"
+      autocomplete="off"
+      spellcheck="false"
+    />
+
+    <div id="walletError"></div>
+
+    <button id="saveScore">
+      СОХРАНИТЬ РЕЗУЛЬТАТ
+    </button>
+  </div>
+</div>
+
+<div id="leaderboardScreen" class="hidden">
+  <div class="panel">
+
+    <h1>🏆 ЛИДЕРЫ</h1>
+
+    <div id="leaderboard"></div>
+
+    <button id="restartButton">
+      НОВЫЙ ЗАБЕГ
+    </button>
+
+    <button id="closeLeaderboard">
+      НАЗАД
+    </button>
+
+  </div>
+</div>
+
+
+<script type="module">
+
+import * as THREE from
+'https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js';
+
+
+/* =========================================================
+   BASIC SETUP
+========================================================= */
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x090b0d);
+scene.fog = new THREE.Fog(0x090b0d, 14, 55);
+
+
+const camera = new THREE.PerspectiveCamera(
+  60,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+
+camera.position.set(0, 4.5, 8);
+
+
+const renderer = new THREE.WebGLRenderer({
+  antialias: true
+});
+
+renderer.setSize(
+  window.innerWidth,
+  window.innerHeight
+);
+
+renderer.setPixelRatio(
+  Math.min(window.devicePixelRatio, 2)
+);
+
+renderer.shadowMap.enabled = true;
+
+document.body.prepend(
+  renderer.domElement
+);
+
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+scene.add(
+  new THREE.AmbientLight(
+    0xb7a078,
+    1.4
+  )
+);
+
+
+const mainLight =
+  new THREE.DirectionalLight(
+    0xffd898,
+    2.7
+  );
+
+mainLight.position.set(
+  5,
+  10,
+  5
+);
+
+mainLight.castShadow = true;
+
+scene.add(mainLight);
+
+
+const torchLight =
+  new THREE.PointLight(
+    0xff8b32,
+    9,
+    18
+  );
+
+torchLight.position.set(
+  0,
+  4,
+  -5
+);
+
+scene.add(torchLight);
+
+
+/* =========================================================
+   VARIABLES
+========================================================= */
+
+const lanes = [
+  -2.4,
+   0,
+   2.4
+];
+
+
+let gameRunning = false;
+
+let targetLane = 1;
+
+let velocityY = 0;
+
+let grounded = true;
+
+let score = 0;
+
+let gold = 0;
+
+let worldSpeed = 12;
+
+let elapsed = 0;
+
+let spawnTimer = 0;
+
+let roadOffset = 0;
+
+
+const objects = [];
+
+const clock =
+  new THREE.Clock();
+
+
+/* =========================================================
+   MATERIALS
+========================================================= */
+
+const rockMaterial =
+  new THREE.MeshStandardMaterial({
+    color: 0x3d3932,
+    roughness: 1
+  });
+
+
+const dirtMaterial =
+  new THREE.MeshStandardMaterial({
+    color: 0x4a321f,
+    roughness: 1
+  });
+
+
+/* =========================================================
+   MINE FLOOR
+========================================================= */
+
+const floorGeometry =
+  new THREE.PlaneGeometry(
+    11,
+    120
+  );
+
+const floor =
+  new THREE.Mesh(
+    floorGeometry,
+    dirtMaterial
+  );
+
+floor.rotation.x =
+  -Math.PI / 2;
+
+floor.position.z =
+  -45;
+
+floor.receiveShadow = true;
+
+scene.add(floor);
+
+
+/* =========================================================
+   RAILS / TRACK
+========================================================= */
+
+const railMaterial =
+  new THREE.MeshStandardMaterial({
+    color: 0x555555,
+    metalness: .8,
+    roughness: .4
+  });
+
+
+for (const x of [-3.6, 3.6]) {
+
+  const rail =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        .12,
+        .12,
+        120
+      ),
+      railMaterial
+    );
+
+  rail.position.set(
+    x,
+    .07,
+    -45
+  );
+
+  scene.add(rail);
+}
+
+
+/* =========================================================
+   MINE WALLS
+========================================================= */
+
+for (const side of [-1,1]) {
+
+  for (
+    let z = -5;
+    z > -100;
+    z -= 5
+  ) {
+
+    const wallRock =
+      new THREE.Mesh(
+        new THREE.DodecahedronGeometry(
+          2.8,
+          0
+        ),
+        rockMaterial
+      );
+
+    wallRock.scale.set(
+      1.5,
+      1.8,
+      1.3
+    );
+
+    wallRock.position.set(
+      side * 6.3,
+      2,
+      z
+    );
+
+    wallRock.rotation.set(
+      Math.random(),
+      Math.random(),
+      Math.random()
+    );
+
+    scene.add(wallRock);
+
+  }
+}
+
+
+/* =========================================================
+   WOOD SUPPORT BEAMS
+========================================================= */
+
+const woodMaterial =
+  new THREE.MeshStandardMaterial({
+    color: 0x5a351b,
+    roughness: .9
+  });
+
+
+for (
+  let z = -5;
+  z > -100;
+  z -= 9
+) {
+
+  const left =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        .45,
+        5,
+        .45
+      ),
+      woodMaterial
+    );
+
+  left.position.set(
+    -4.3,
+    2.4,
+    z
+  );
+
+  scene.add(left);
+
+
+  const right =
+    left.clone();
+
+  right.position.x =
+    4.3;
+
+  scene.add(right);
+
+
+  const top =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        9,
+        .45,
+        .45
+      ),
+      woodMaterial
+    );
+
+  top.position.set(
+    0,
+    4.7,
+    z
+  );
+
+  scene.add(top);
+}
+
+
+/* =========================================================
+   GNOME
+========================================================= */
+
+const gnome =
+  new THREE.Group();
+
+
+/* body */
+
+const body =
+  new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      .65,
+      .85,
+      1.4,
+      12
+    ),
+    new THREE.MeshStandardMaterial({
+      color: 0x31587e
+    })
+  );
+
+body.position.y =
+  1.1;
+
+body.castShadow =
+  true;
+
+gnome.add(body);
+
+
+/* head */
+
+const head =
+  new THREE.Mesh(
+    new THREE.SphereGeometry(
+      .58,
+      20,
+      20
+    ),
+    new THREE.MeshStandardMaterial({
+      color: 0xf1b98c
+    })
+  );
+
+head.position.y =
+  2.1;
+
+head.castShadow =
+  true;
+
+gnome.add(head);
+
+
+/* nose */
+
+const nose =
+  new THREE.Mesh(
+    new THREE.SphereGeometry(
+      .18,
+      12,
+      12
+    ),
+    new THREE.MeshStandardMaterial({
+      color: 0xe7a878
+    })
+  );
+
+nose.position.set(
+  0,
+  2.08,
+  -.54
+);
+
+gnome.add(nose);
+
+
+/* beard */
+
+const beard =
+  new THREE.Mesh(
+    new THREE.ConeGeometry(
+      .5,
+      1.1,
+      12
+    ),
+    new THREE.MeshStandardMaterial({
+      color: 0xe5dfcd
+    })
+  );
+
+beard.position.set(
+  0,
+  1.6,
+  -.45
+);
+
+beard.rotation.x =
+  Math.PI;
+
+gnome.add(beard);
+
+
+/* hat */
+
+const hat =
+  new THREE.Mesh(
+    new THREE.ConeGeometry(
+      .68,
+      1.6,
+      16
+    ),
+    new THREE.MeshStandardMaterial({
+      color: 0xc6342c
+    })
+  );
+
+hat.position.y =
+  3.05;
+
+hat.rotation.z =
+  -.18;
+
+gnome.add(hat);
+
+
+/* feet */
+
+for (const x of [-.38,.38]) {
+
+  const foot =
+    new THREE.Mesh(
+      new THREE.BoxGeometry(
+        .5,
+        .35,
+        .75
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0x2a211b
+      })
+    );
+
+  foot.position.set(
+    x,
+    .32,
+    -.15
+  );
+
+  foot.castShadow = true;
+
+  gnome.add(foot);
+}
+
+
+/* =========================================================
+   PICKAXE
+========================================================= */
+
+const pickaxe =
+  new THREE.Group();
+
+
+const handle =
+  new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      .06,
+      .06,
+      1.5,
+      8
+    ),
+    woodMaterial
+  );
+
+handle.rotation.z =
+  -.55;
+
+pickaxe.add(handle);
+
+
+const pickHead =
+  new THREE.Mesh(
+    new THREE.BoxGeometry(
+      .9,
+      .12,
+      .12
+    ),
+    railMaterial
+  );
+
+pickHead.position.set(
+  .37,
+  .58,
+  0
+);
+
+pickHead.rotation.z =
+  -.55;
+
+pickaxe.add(pickHead);
+
+
+pickaxe.position.set(
+  .8,
+  1.5,
+  0
+);
+
+gnome.add(pickaxe);
+
+
+gnome.position.set(
+  0,
+  0,
+  2
+);
+
+scene.add(gnome);
+
+
+/* =========================================================
+   GOLD NUGGET
+========================================================= */
+
+function createGold() {
+
+  const nugget =
+    new THREE.Mesh(
+      new THREE.IcosahedronGeometry(
+        .35,
+        1
+      ),
+      new THREE.MeshStandardMaterial({
+        color: 0xffc400,
+        emissive: 0x8b5700,
+        emissiveIntensity: .65,
+        metalness: .7,
+        roughness: .28
+      })
+    );
+
+  nugget.scale.set(
+    1.1,
+    .75,
+    .8
+  );
+
+  nugget.castShadow =
+    true;
+
+  return nugget;
+
+}
+
+
+/* =========================================================
+   ROCK OBSTACLE
+========================================================= */
+
+function createObstacle() {
+
+  const rock =
+    new THREE.Mesh(
+      new THREE.DodecahedronGeometry(
+        .75,
+        0
+      ),
+      rockMaterial
+    );
+
+  rock.scale.set(
+    1,
+    .8,
+    1
+  );
+
+  rock.position.y =
+    .6;
+
+  rock.castShadow =
+    true;
+
+  return rock;
+
+}
+
+
+/* =========================================================
+   SPAWN
+========================================================= */
+
+function spawnObject() {
+
+  const lane =
+    Math.floor(
+      Math.random() * 3
+    );
+
+
+  if (Math.random() < .63) {
+
+    const nugget =
+      createGold();
+
+    nugget.position.set(
+      lanes[lane],
+      1,
+      -45
+    );
+
+    scene.add(nugget);
+
+    objects.push({
+      mesh: nugget,
+      type: "gold"
+    });
+
+  }
+
+  else {
+
+    const obstacle =
+      createObstacle();
+
+    obstacle.position.set(
+      lanes[lane],
+      .65,
+      -45
+    );
+
+    scene.add(obstacle);
+
+    objects.push({
+      mesh: obstacle,
+      type: "rock"
+    });
+
+  }
+
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+window.addEventListener(
+  "keydown",
+  event => {
+
+    if (!gameRunning)
+      return;
+
+
+    if (
+      event.code === "ArrowLeft" ||
+      event.code === "KeyA"
+    ) {
+
+      targetLane =
+        Math.max(
+          0,
+          targetLane - 1
+        );
+
+    }
+
+
+    if (
+      event.code === "ArrowRight" ||
+      event.code === "KeyD"
+    ) {
+
+      targetLane =
+        Math.min(
+          2,
+          targetLane + 1
+        );
+
+    }
+
+
+    if (
+      event.code === "Space" ||
+      event.code === "ArrowUp" ||
+      event.code === "KeyW"
+    ) {
+
+      if (grounded) {
+
+        velocityY = 8;
+
+        grounded = false;
+
+      }
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function checkCollision(obj) {
+
+  const dx =
+    Math.abs(
+      obj.mesh.position.x -
+      gnome.position.x
+    );
+
+  const dz =
+    Math.abs(
+      obj.mesh.position.z -
+      gnome.position.z
+    );
+
+
+  if (
+    dx < .85 &&
+    dz < .9
+  ) {
+
+    if (
+      obj.type === "gold"
+    ) {
+
+      gold++;
+
+      score += 100;
+
+      scene.remove(
+        obj.mesh
+      );
+
+      obj.remove = true;
+
+    }
+
+
+    if (
+      obj.type === "rock" &&
+      gnome.position.y < .85
+    ) {
+
+      endGame();
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   UI
+========================================================= */
+
+const scoreElement =
+  document.getElementById("score");
+
+const goldElement =
+  document.getElementById("gold");
+
+const speedElement =
+  document.getElementById("speed");
+
+const gameOverScreen =
+  document.getElementById("gameOver");
+
+const startScreen =
+  document.getElementById("startScreen");
+
+const leaderboardScreen =
+  document.getElementById(
+    "leaderboardScreen"
+  );
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function startGame() {
+
+  objects.forEach(
+    object =>
+      scene.remove(object.mesh)
+  );
+
+  objects.length = 0;
+
+
+  score = 0;
+
+  gold = 0;
+
+  elapsed = 0;
+
+  spawnTimer = 0;
+
+  worldSpeed = 12;
+
+  targetLane = 1;
+
+
+  gnome.position.set(
+    0,
+    0,
+    2
+  );
+
+
+  velocityY = 0;
+
+  grounded = true;
+
+
+  startScreen.classList.add(
+    "hidden"
+  );
+
+  gameOverScreen.classList.add(
+    "hidden"
+  );
+
+  leaderboardScreen.classList.add(
+    "hidden"
+  );
+
+
+  clock.getDelta();
+
+  gameRunning = true;
+
+}
+
+
+/* =========================================================
+   END GAME
+========================================================= */
+
+function endGame() {
+
+  if (!gameRunning)
+    return;
+
+
+  gameRunning = false;
+
+
+  document.getElementById(
+    "finalScore"
+  ).textContent =
+    Math.floor(score);
+
+
+  document.getElementById(
+    "finalGold"
+  ).textContent =
+    gold;
+
+
+  document.getElementById(
+    "walletInput"
+  ).value = "";
+
+
+  document.getElementById(
+    "walletError"
+  ).textContent = "";
+
+
+  gameOverScreen.classList.remove(
+    "hidden"
+  );
+
+}
+
+
+/* =========================================================
+   EVM ADDRESS
+========================================================= */
+
+function isValidEVMAddress(address) {
+
+  return /^0x[a-fA-F0-9]{40}$/
+    .test(address);
+
+}
+
+
+/* =========================================================
+   LEADERBOARD
+========================================================= */
+
+function saveLeaderboard(
+  wallet,
+  result,
+  goldAmount
+) {
+
+  const data =
+    JSON.parse(
+      localStorage.getItem(
+        "gnomeRunnerLeaderboard"
+      ) || "[]"
+    );
+
+
+  data.push({
+    wallet,
+    score: result,
+    gold: goldAmount,
+    date: Date.now()
+  });
+
+
+  data.sort(
+    (a,b) =>
+      b.score - a.score
+  );
+
+
+  data.splice(
+    20
+  );
+
+
+  localStorage.setItem(
+    "gnomeRunnerLeaderboard",
+    JSON.stringify(data)
+  );
+
+}
+
+
+/* =========================================================
+   DISPLAY LEADERBOARD
+========================================================= */
+
+function displayLeaderboard() {
+
+  const container =
+    document.getElementById(
+      "leaderboard"
+    );
+
+
+  container.innerHTML = "";
+
+
+  const data =
+    JSON.parse(
+      localStorage.getItem(
+        "gnomeRunnerLeaderboard"
+      ) || "[]"
+    );
+
+
+  if (
+    data.length === 0
+  ) {
+
+    container.innerHTML =
+      "<p style='text-align:center;color:#777'>Пока никто не добежал достаточно далеко.</p>";
+
+  }
+
+
+  data
+    .slice(0,10)
+    .forEach(
+      (player,index) => {
+
+        const row =
+          document.createElement(
+            "div"
+          );
+
+        row.className =
+          "leaderRow";
+
+
+        const shortWallet =
+          player.wallet.slice(
+            0,
+            6
+          )
+          +
+          "..."
+          +
+          player.wallet.slice(
+            -4
+          );
+
+
+        row.innerHTML = `
+          <div>#${index + 1}</div>
+          <div class="leaderWallet">
+            ${shortWallet}
+          </div>
+          <div class="leaderScore">
+            ${player.score}
+          </div>
+        `;
+
+
+        container.appendChild(
+          row
+        );
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+document.getElementById(
+  "startButton"
+)
+.addEventListener(
+  "click",
+  startGame
+);
+
+
+document.getElementById(
+  "restartButton"
+)
+.addEventListener(
+  "click",
+  startGame
+);
+
+
+document.getElementById(
+  "saveScore"
+)
+.addEventListener(
+  "click",
+  () => {
+
+    const wallet =
+      document
+        .getElementById(
+          "walletInput"
+        )
+        .value
+        .trim();
+
+
+    const error =
+      document.getElementById(
+        "walletError"
+      );
+
+
+    if (
+      !isValidEVMAddress(wallet)
+    ) {
+
+      error.textContent =
+        "Нужен корректный EVM-адрес вида 0x + 40 символов.";
+
+      return;
+
+    }
+
+
+    saveLeaderboard(
+      wallet,
+      Math.floor(score),
+      gold
+    );
+
+
+    gameOverScreen.classList.add(
+      "hidden"
+    );
+
+
+    displayLeaderboard();
+
+
+    leaderboardScreen.classList.remove(
+      "hidden"
+    );
+
+  }
+);
+
+
+document.getElementById(
+  "showLeaderboardStart"
+)
+.addEventListener(
+  "click",
+  () => {
+
+    startScreen.classList.add(
+      "hidden"
+    );
+
+    displayLeaderboard();
+
+    leaderboardScreen.classList.remove(
+      "hidden"
+    );
+
+  }
+);
+
+
+document.getElementById(
+  "closeLeaderboard"
+)
+.addEventListener(
+  "click",
+  () => {
+
+    leaderboardScreen.classList.add(
+      "hidden"
+    );
+
+    startScreen.classList.remove(
+      "hidden"
+    );
+
+  }
+);
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function animate() {
+
+  requestAnimationFrame(
+    animate
+  );
+
+
+  const delta =
+    Math.min(
+      clock.getDelta(),
+      .04
+    );
+
+
+  if (gameRunning) {
+
+    elapsed += delta;
+
+
+    /* difficulty */
+
+    worldSpeed =
+      Math.min(
+        32,
+        12 + elapsed * .22
+      );
+
+
+    score +=
+      delta *
+      worldSpeed *
+      2;
+
+
+    /* lane movement */
+
+    const targetX =
+      lanes[targetLane];
+
+
+    gnome.position.x +=
+      (
+        targetX -
+        gnome.position.x
+      )
+      *
+      Math.min(
+        1,
+        delta * 12
+      );
+
+
+    /* jump */
+
+    velocityY -=
+      20 * delta;
+
+
+    gnome.position.y +=
+      velocityY * delta;
+
+
+    if (
+      gnome.position.y <= 0
+    ) {
+
+      gnome.position.y = 0;
+
+      velocityY = 0;
+
+      grounded = true;
+
+    }
+
+
+    /* running animation */
+
+    body.rotation.z =
+      Math.sin(
+        elapsed * 11
+      ) * .035;
+
+
+    pickaxe.rotation.z =
+      Math.sin(
+        elapsed * 11
+      ) * .15;
+
+
+    /* spawning */
+
+    spawnTimer -= delta;
+
+
+    if (
+      spawnTimer <= 0
+    ) {
+
+      spawnObject();
+
+
+      const difficulty =
+        Math.max(
+          .38,
+          1.05 -
+          elapsed * .004
+        );
+
+
+      spawnTimer =
+        difficulty *
+        (
+          .75 +
+          Math.random() * .55
+        );
+
+    }
+
+
+    /* move world objects */
+
+    for (
+      const object of objects
+    ) {
+
+      object.mesh.position.z +=
+        worldSpeed *
+        delta;
+
+
+      if (
+        object.type === "gold"
+      ) {
+
+        object.mesh.rotation.x +=
+          delta * 3;
+
+        object.mesh.rotation.y +=
+          delta * 5;
+
+      }
+
+
+      checkCollision(
+        object
+      );
+
+
+      if (
+        object.mesh.position.z > 10
+      ) {
+
+        object.remove = true;
+
+        scene.remove(
+          object.mesh
+        );
+
+      }
+
+    }
+
+
+    for (
+      let i =
+        objects.length - 1;
+      i >= 0;
+      i--
+    ) {
+
+      if (
+        objects[i].remove
+      ) {
+
+        objects.splice(
+          i,
+          1
+        );
+
+      }
+
+    }
+
+
+    /* camera */
+
+    camera.position.x +=
+      (
+        gnome.position.x * .25 -
+        camera.position.x
+      )
+      *
+      delta *
+      4;
+
+
+    camera.lookAt(
+      gnome.position.x * .15,
+      1.7 + gnome.position.y * .1,
+      -8
+    );
+
+
+    /* HUD */
+
+    scoreElement.textContent =
+      Math.floor(score);
+
+    goldElement.textContent =
+      gold;
+
+    speedElement.textContent =
+      (
+        worldSpeed / 12
+      ).toFixed(1);
+
+  }
+
+
+  renderer.render(
+    scene,
+    camera
+  );
+
+}
+
+
+animate();
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    camera.aspect =
+      window.innerWidth /
+      window.innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+  }
+);
+
+</script>
+
+</body>
+</html>

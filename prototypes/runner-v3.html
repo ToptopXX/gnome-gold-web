@@ -1,0 +1,4840 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+>
+
+<title>Gnome Gold Runner</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+
+    margin: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    background: #17121e;
+
+    font-family:
+        Trebuchet MS,
+        Arial,
+        sans-serif;
+
+    color: #fff;
+}
+
+canvas {
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+#hud {
+
+    position: fixed;
+
+    left: 16px;
+    top: 16px;
+
+    z-index: 20;
+
+    min-width: 180px;
+
+    padding: 13px 16px;
+
+    border-radius: 16px;
+
+    background:
+        rgba(
+            39,
+            28,
+            40,
+            .90
+        );
+
+    border:
+        3px solid
+        #211720;
+
+    box-shadow:
+        0 5px 0
+        rgba(
+            0,
+            0,
+            0,
+            .28
+        );
+
+}
+
+.hudRow {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    gap: 24px;
+
+    margin: 4px 0;
+
+    font-size: 15px;
+
+    font-weight: 900;
+
+}
+
+.hudValue {
+
+    color: #ffd861;
+
+}
+
+
+/* =========================================================
+   OVERLAYS
+========================================================= */
+
+.overlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 50;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(
+            17,
+            11,
+            20,
+            .86
+        );
+
+}
+
+.hidden {
+
+    display: none !important;
+
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+.panel {
+
+    width:
+        min(
+            520px,
+            94vw
+        );
+
+    padding:
+        30px 26px;
+
+    text-align: center;
+
+    border-radius: 26px;
+
+    background:
+        #38293c;
+
+    border:
+        5px solid
+        #181118;
+
+    box-shadow:
+
+        0 10px 0
+        rgba(
+            0,
+            0,
+            0,
+            .30
+        ),
+
+        inset
+        0 0 0
+        3px
+        #705062;
+
+}
+
+.title {
+
+    margin: 0;
+
+    color: #f4d266;
+
+    font-size:
+        clamp(
+            34px,
+            9vw,
+            56px
+        );
+
+    line-height: .95;
+
+    letter-spacing: -2px;
+
+    text-shadow:
+
+        3px 3px 0
+        #24161c,
+
+        5px 5px 0
+        rgba(
+            0,
+            0,
+            0,
+            .20
+        );
+
+}
+
+.subtitle {
+
+    margin-top: 9px;
+
+    margin-bottom: 26px;
+
+    font-size: 13px;
+
+    letter-spacing: 4px;
+
+    color: #d1a7ae;
+
+    font-weight: 900;
+
+}
+
+.description {
+
+    color: #eadde0;
+
+    line-height: 1.6;
+
+    font-size: 15px;
+
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+button {
+
+    border: 4px solid
+        #251719;
+
+    border-radius: 14px;
+
+    padding: 13px 20px;
+
+    margin: 7px;
+
+    cursor: pointer;
+
+    font-weight: 1000;
+
+    font-size: 15px;
+
+    color: #342014;
+
+    background: #eac552;
+
+    box-shadow:
+
+        0 5px 0
+        #6d4522;
+
+}
+
+button:active {
+
+    transform:
+        translateY(
+            4px
+        );
+
+    box-shadow:
+        0 1px 0
+        #6d4522;
+
+}
+
+.secondary {
+
+    background:
+        #ae8298;
+
+    color:
+        #21151c;
+
+    box-shadow:
+        0 5px 0
+        #563849;
+
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+input {
+
+    width: 100%;
+
+    margin-top: 13px;
+
+    padding: 14px;
+
+    border-radius: 13px;
+
+    border:
+        4px solid
+        #1c1319;
+
+    outline: none;
+
+    background:
+        #241921;
+
+    color:
+        #fff;
+
+    font-family:
+        monospace;
+
+    font-size:
+        14px;
+
+}
+
+#walletError {
+
+    color:
+        #ff9494;
+
+    min-height:
+        24px;
+
+    padding-top:
+        6px;
+
+}
+
+
+/* =========================================================
+   GAME RESULT
+========================================================= */
+
+.result {
+
+    margin:
+        14px 0 4px;
+
+    color:
+        #ffd861;
+
+    font-size:
+        45px;
+
+    font-weight:
+        1000;
+
+}
+
+
+/* =========================================================
+   LEADERBOARD
+========================================================= */
+
+#leaderboard {
+
+    margin:
+        18px 0;
+
+    max-height:
+        320px;
+
+    overflow-y:
+        auto;
+
+}
+
+.leaderRow {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        42px
+        1fr
+        80px;
+
+    gap:
+        8px;
+
+    padding:
+        10px 5px;
+
+    border-bottom:
+        2px dashed
+        rgba(
+            255,
+            255,
+            255,
+            .12
+        );
+
+    text-align:
+        left;
+
+}
+
+.wallet {
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
+
+    font-family:
+        monospace;
+
+}
+
+.score {
+
+    text-align:
+        right;
+
+    color:
+        #ffd861;
+
+    font-weight:
+        900;
+
+}
+
+
+/* =========================================================
+   HELP
+========================================================= */
+
+#help {
+
+    position:
+        fixed;
+
+    z-index:
+        15;
+
+    left:
+        50%;
+
+    bottom:
+        18px;
+
+    transform:
+        translateX(
+            -50%
+        );
+
+    padding:
+        9px 14px;
+
+    border-radius:
+        12px;
+
+    background:
+        rgba(
+            24,
+            17,
+            26,
+            .84
+        );
+
+    border:
+        2px solid
+        #4d3948;
+
+    font-size:
+        13px;
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+#mobileControls {
+
+    display:
+        none;
+
+    position:
+        fixed;
+
+    z-index:
+        25;
+
+    left:
+        0;
+
+    right:
+        0;
+
+    bottom:
+        18px;
+
+    padding:
+        0 20px;
+
+    justify-content:
+        space-between;
+
+    pointer-events:
+        none;
+
+}
+
+.mobileGroup {
+
+    display:
+        flex;
+
+    gap:
+        9px;
+
+}
+
+.mobileButton {
+
+    pointer-events:
+        auto;
+
+    width:
+        63px;
+
+    height:
+        63px;
+
+    margin:
+        0;
+
+    padding:
+        0;
+
+    border-radius:
+        50%;
+
+    background:
+        rgba(
+            66,
+            47,
+            69,
+            .87
+        );
+
+    color:
+        #f2d979;
+
+    font-size:
+        25px;
+
+    box-shadow:
+        none;
+
+}
+
+
+@media (
+    max-width: 760px
+) {
+
+    #help {
+
+        display:
+            none;
+
+    }
+
+    #mobileControls {
+
+        display:
+            flex;
+
+    }
+
+    #hud {
+
+        left:
+            9px;
+
+        top:
+            9px;
+
+        min-width:
+            155px;
+
+        padding:
+            9px 12px;
+
+    }
+
+    .hudRow {
+
+        font-size:
+            13px;
+
+    }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<!-- ======================================================
+     HUD
+====================================================== -->
+
+<div id="hud">
+
+    <div class="hudRow">
+        <span>ROAD</span>
+        <span
+            class="hudValue"
+            id="distance"
+        >
+            0 m
+        </span>
+    </div>
+
+    <div class="hudRow">
+        <span>GOLD</span>
+        <span
+            class="hudValue"
+            id="gold"
+        >
+            0
+        </span>
+    </div>
+
+    <div class="hudRow">
+        <span>SCORE</span>
+        <span
+            class="hudValue"
+            id="score"
+        >
+            0
+        </span>
+    </div>
+
+    <div class="hudRow">
+        <span>SPEED</span>
+        <span
+            class="hudValue"
+            id="speed"
+        >
+            1.0x
+        </span>
+    </div>
+
+</div>
+
+
+
+<!-- ======================================================
+     START
+====================================================== -->
+
+<div
+    id="startScreen"
+    class="overlay"
+>
+
+    <div class="panel">
+
+        <h1 class="title">
+            GNOME<br>
+            RUNNER
+        </h1>
+
+        <div class="subtitle">
+            THE GOLDEN MINE
+        </div>
+
+        <p class="description">
+
+            Беги всё глубже
+            в старую волшебную шахту.
+
+            Собирай золото,
+            перепрыгивай камни
+            и попробуй выяснить,
+            почему гномы вообще решили,
+            что бег с киркой
+            является разумной профессией.
+
+        </p>
+
+        <button
+            id="startButton"
+        >
+            ⛏ НАЧАТЬ
+        </button>
+
+        <button
+            id="showLeaderboardStart"
+            class="secondary"
+        >
+            🏆 ЛИДЕРЫ
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- ======================================================
+     GAME OVER
+====================================================== -->
+
+<div
+    id="gameOver"
+    class="overlay hidden"
+>
+
+    <div class="panel">
+
+        <h1 class="title">
+            FINISH!
+        </h1>
+
+        <div
+            class="result"
+            id="finalScore"
+        >
+            0
+        </div>
+
+        <p>
+
+            Собрано золота:
+            <b id="finalGold">0</b>
+
+        </p>
+
+        <p class="description">
+
+            Введи публичный
+            EVM-адрес,
+            чтобы записать результат.
+
+        </p>
+
+        <input
+            id="walletInput"
+            placeholder="0x..."
+            autocomplete="off"
+            spellcheck="false"
+        >
+
+        <div id="walletError"></div>
+
+        <button
+            id="saveScore"
+        >
+            СОХРАНИТЬ
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- ======================================================
+     LEADERBOARD
+====================================================== -->
+
+<div
+    id="leaderboardScreen"
+    class="overlay hidden"
+>
+
+    <div class="panel">
+
+        <h1 class="title">
+            TOP<br>
+            MINERS
+        </h1>
+
+        <div id="leaderboard"></div>
+
+        <button
+            id="restartButton"
+        >
+            НОВЫЙ ЗАБЕГ
+        </button>
+
+        <button
+            id="closeLeaderboard"
+            class="secondary"
+        >
+            НАЗАД
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<div id="help">
+
+    ← → / A D — движение
+    ·
+    SPACE — прыжок
+
+</div>
+
+
+
+<div id="mobileControls">
+
+    <div class="mobileGroup">
+
+        <button
+            id="leftButton"
+            class="mobileButton"
+        >
+            ◀
+        </button>
+
+        <button
+            id="rightButton"
+            class="mobileButton"
+        >
+            ▶
+        </button>
+
+    </div>
+
+
+    <button
+        id="jumpButton"
+        class="mobileButton"
+    >
+        ▲
+    </button>
+
+</div>
+
+
+
+<script type="module">
+
+import * as THREE from
+"https://cdn.jsdelivr.net/npm/three@0.167.1/build/three.module.js";
+
+
+/* =========================================================
+   PERFORMANCE
+========================================================= */
+
+const MOBILE =
+    innerWidth < 800;
+
+
+const PIXEL_RATIO =
+    Math.min(
+        devicePixelRatio,
+        MOBILE
+            ? 1
+            : 1.35
+    );
+
+
+/* =========================================================
+   CONSTANTS
+========================================================= */
+
+const LANES = [
+    -2.25,
+    0,
+    2.25
+];
+
+
+const BASE_SPEED =
+    8;
+
+
+const MAX_SPEED =
+    22;
+
+
+const SEGMENT_LENGTH =
+    30;
+
+
+const SEGMENT_COUNT =
+    MOBILE
+        ? 4
+        : 5;
+
+
+/* =========================================================
+   SCENE
+========================================================= */
+
+const scene =
+    new THREE.Scene();
+
+
+scene.background =
+    new THREE.Color(
+        0x332739
+    );
+
+
+scene.fog =
+    new THREE.Fog(
+        0x332739,
+        22,
+        70
+    );
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+const camera =
+    new THREE.PerspectiveCamera(
+
+        58,
+
+        innerWidth /
+        innerHeight,
+
+        .1,
+
+        180
+
+    );
+
+
+camera.position.set(
+    0,
+    4.8,
+    -8
+);
+
+
+/* =========================================================
+   RENDERER
+========================================================= */
+
+const renderer =
+    new THREE.WebGLRenderer({
+
+        antialias:
+            !MOBILE,
+
+        powerPreference:
+            "high-performance"
+
+    });
+
+
+renderer.setPixelRatio(
+    PIXEL_RATIO
+);
+
+
+renderer.setSize(
+    innerWidth,
+    innerHeight
+);
+
+
+renderer.shadowMap.enabled =
+    false;
+
+
+renderer.outputColorSpace =
+    THREE.SRGBColorSpace;
+
+
+document.body.prepend(
+    renderer.domElement
+);
+
+
+/* =========================================================
+   LIGHT
+========================================================= */
+
+scene.add(
+
+    new THREE.HemisphereLight(
+
+        0xffe0b0,
+
+        0x36283a,
+
+        2.5
+
+    )
+
+);
+
+
+const sun =
+    new THREE.DirectionalLight(
+
+        0xffd6a1,
+
+        2
+
+    );
+
+
+sun.position.set(
+    -5,
+    10,
+    -3
+);
+
+
+scene.add(
+    sun
+);
+
+
+/* =========================================================
+   TOON MATERIAL
+========================================================= */
+
+function toon(
+    color
+) {
+
+    return new THREE.MeshToonMaterial({
+
+        color
+
+    });
+
+}
+
+
+/* =========================================================
+   COLORS
+========================================================= */
+
+const COLOR = {
+
+    ink:
+        0x21171d,
+
+    skin:
+        0xe9a176,
+
+    cheek:
+        0xcd775d,
+
+    beard:
+        0x236d6c,
+
+    beardLight:
+        0x338d87,
+
+    green:
+        0x496742,
+
+    greenLight:
+        0x657b4b,
+
+    leather:
+        0x5d3928,
+
+    leatherDark:
+        0x36241f,
+
+    boot:
+        0x2e2120,
+
+    gold:
+        0xe2ad3f,
+
+    goldLight:
+        0xffd567,
+
+    rock:
+        0x665268,
+
+    rockDark:
+        0x473b4b,
+
+    ground:
+        0x684d42,
+
+    wood:
+        0x765039,
+
+    crystal:
+        0x9d6ac5,
+
+    crystalDark:
+        0x6c4c8b,
+
+    white:
+        0xf3e7d9,
+
+    blue:
+        0x55acc0
+
+};
+
+
+/* =========================================================
+   SIMPLE BLACK OUTLINE
+========================================================= */
+
+const outlineMaterial =
+    new THREE.MeshBasicMaterial({
+
+        color:
+            COLOR.ink,
+
+        side:
+            THREE.BackSide
+
+    });
+
+
+function addOutlinedMesh(
+
+    parent,
+
+    geometry,
+
+    material,
+
+    scale = 1.07
+
+) {
+
+    const group =
+        new THREE.Group();
+
+
+    const outline =
+        new THREE.Mesh(
+
+            geometry,
+
+            outlineMaterial
+
+        );
+
+
+    outline.scale.setScalar(
+        scale
+    );
+
+
+    group.add(
+        outline
+    );
+
+
+    const mesh =
+        new THREE.Mesh(
+
+            geometry,
+
+            material
+
+        );
+
+
+    group.add(
+        mesh
+    );
+
+
+    parent.add(
+        group
+    );
+
+
+    return group;
+
+}
+
+
+/* =========================================================
+   GNOME
+========================================================= */
+
+function createGnome() {
+
+    const root =
+        new THREE.Group();
+
+
+    /* =====================================================
+       BODY
+    ===================================================== */
+
+    const bodyGeo =
+        new THREE.SphereGeometry(
+            .68,
+            10,
+            8
+        );
+
+
+    const body =
+        addOutlinedMesh(
+
+            root,
+
+            bodyGeo,
+
+            toon(
+                COLOR.green
+            ),
+
+            1.06
+
+        );
+
+
+    body.scale.set(
+        1.05,
+        1.12,
+        .85
+    );
+
+
+    body.position.y =
+        1.45;
+
+
+    /* =====================================================
+       HEAD
+    ===================================================== */
+
+    const head =
+        new THREE.Group();
+
+
+    head.position.set(
+        0,
+        2.45,
+        .04
+    );
+
+
+    root.add(
+        head
+    );
+
+
+    const faceGeo =
+        new THREE.SphereGeometry(
+            .78,
+            12,
+            9
+        );
+
+
+    const face =
+        addOutlinedMesh(
+
+            head,
+
+            faceGeo,
+
+            toon(
+                COLOR.skin
+            ),
+
+            1.055
+
+        );
+
+
+    face.scale.set(
+        1,
+        .92,
+        .92
+    );
+
+
+    /* =====================================================
+       EARS
+    ===================================================== */
+
+    function ear(
+        x
+    ) {
+
+        const group =
+            addOutlinedMesh(
+
+                head,
+
+                new THREE.ConeGeometry(
+                    .22,
+                    .52,
+                    7
+                ),
+
+                toon(
+                    COLOR.skin
+                ),
+
+                1.07
+
+            );
+
+
+        group.position.set(
+            x,
+            .02,
+            .02
+        );
+
+
+        group.rotation.z =
+            x < 0
+            ?
+            Math.PI / 2
+            :
+            -Math.PI / 2;
+
+    }
+
+
+    ear(
+        -.85
+    );
+
+
+    ear(
+        .85
+    );
+
+
+    /* =====================================================
+       EYES
+    ===================================================== */
+
+    function eye(
+        x
+    ) {
+
+        const eyeGroup =
+            new THREE.Group();
+
+
+        eyeGroup.position.set(
+            x,
+            .20,
+            .68
+        );
+
+
+        head.add(
+            eyeGroup
+        );
+
+
+        const white =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .20,
+                    10,
+                    7
+                ),
+
+                toon(
+                    COLOR.white
+                )
+
+            );
+
+
+        white.scale.set(
+            1,
+            1.2,
+            .45
+        );
+
+
+        eyeGroup.add(
+            white
+        );
+
+
+        const iris =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .105,
+                    8,
+                    6
+                ),
+
+                toon(
+                    COLOR.blue
+                )
+
+            );
+
+
+        iris.scale.z =
+            .4;
+
+
+        iris.position.z =
+            .12;
+
+
+        eyeGroup.add(
+            iris
+        );
+
+
+        const pupil =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .05,
+                    7,
+                    5
+                ),
+
+                toon(
+                    COLOR.ink
+                )
+
+            );
+
+
+        pupil.scale.z =
+            .35;
+
+
+        pupil.position.z =
+            .18;
+
+
+        eyeGroup.add(
+            pupil
+        );
+
+
+        const shine =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .021,
+                    5,
+                    4
+                ),
+
+                new THREE.MeshBasicMaterial({
+                    color:
+                        0xffffff
+                })
+
+            );
+
+
+        shine.position.set(
+            -.025,
+            .025,
+            .205
+        );
+
+
+        eyeGroup.add(
+            shine
+        );
+
+    }
+
+
+    eye(
+        -.27
+    );
+
+
+    eye(
+        .27
+    );
+
+
+    /* =====================================================
+       NOSE
+    ===================================================== */
+
+    const nose =
+        addOutlinedMesh(
+
+            head,
+
+            new THREE.SphereGeometry(
+                .22,
+                9,
+                6
+            ),
+
+            toon(
+                COLOR.cheek
+            ),
+
+            1.07
+
+        );
+
+
+    nose.scale.set(
+        1.1,
+        .8,
+        1
+    );
+
+
+    nose.position.set(
+        0,
+        -.05,
+        .76
+    );
+
+
+    /* =====================================================
+       BEARD
+    ===================================================== */
+
+    const beard =
+        addOutlinedMesh(
+
+            head,
+
+            new THREE.SphereGeometry(
+                .60,
+                10,
+                8
+            ),
+
+            toon(
+                COLOR.beard
+            ),
+
+            1.055
+
+        );
+
+
+    beard.scale.set(
+        1,
+        .85,
+        .55
+    );
+
+
+    beard.position.set(
+        0,
+        -.46,
+        .54
+    );
+
+
+    const beardTip =
+        addOutlinedMesh(
+
+            head,
+
+            new THREE.ConeGeometry(
+                .42,
+                .72,
+                9
+            ),
+
+            toon(
+                COLOR.beard
+            ),
+
+            1.055
+
+        );
+
+
+    beardTip.rotation.x =
+        Math.PI;
+
+
+    beardTip.position.set(
+        0,
+        -.83,
+        .46
+    );
+
+
+    /* =====================================================
+       MOUSTACHE
+    ===================================================== */
+
+    function moustache(
+        x
+    ) {
+
+        const piece =
+            new THREE.Mesh(
+
+                new THREE.SphereGeometry(
+                    .24,
+                    8,
+                    5
+                ),
+
+                toon(
+                    COLOR.beardLight
+                )
+
+            );
+
+
+        piece.scale.set(
+            1.4,
+            .3,
+            .32
+        );
+
+
+        piece.position.set(
+            x,
+            -.20,
+            .75
+        );
+
+
+        piece.rotation.z =
+            x < 0
+                ? -.16
+                : .16;
+
+
+        head.add(
+            piece
+        );
+
+    }
+
+
+    moustache(
+        -.21
+    );
+
+
+    moustache(
+        .21
+    );
+
+
+    /* =====================================================
+       EYEBROWS
+    ===================================================== */
+
+    function brow(
+        x
+    ) {
+
+        const eyebrow =
+            new THREE.Mesh(
+
+                new THREE.BoxGeometry(
+                    .32,
+                    .075,
+                    .055
+                ),
+
+                toon(
+                    COLOR.beard
+                )
+
+            );
+
+
+        eyebrow.position.set(
+            x,
+            .45,
+            .71
+        );
+
+
+        eyebrow.rotation.z =
+            x < 0
+            ?
+            -.12
+            :
+            .12;
+
+
+        head.add(
+            eyebrow
+        );
+
+    }
+
+
+    brow(
+        -.27
+    );
+
+
+    brow(
+        .27
+    );
+
+
+    /* =====================================================
+       HAT
+    ===================================================== */
+
+    const hatBrim =
+        addOutlinedMesh(
+
+            head,
+
+            new THREE.CylinderGeometry(
+                .83,
+                .83,
+                .13,
+                12
+            ),
+
+            toon(
+                COLOR.greenLight
+            ),
+
+            1.055
+
+        );
+
+
+    hatBrim.position.y =
+        .67;
+
+
+    const hatTop =
+        addOutlinedMesh(
+
+            head,
+
+            new THREE.SphereGeometry(
+                .63,
+                10,
+                7
+            ),
+
+            toon(
+                COLOR.green
+            ),
+
+            1.055
+
+        );
+
+
+    hatTop.scale.set(
+        1,
+        .58,
+        .88
+    );
+
+
+    hatTop.position.y =
+        .87;
+
+
+    /* head lamp */
+
+    const lampBorder =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .19,
+                .19,
+                .10,
+                10
+            ),
+
+            toon(
+                COLOR.ink
+            )
+
+        );
+
+
+    lampBorder.rotation.x =
+        Math.PI / 2;
+
+
+    lampBorder.position.set(
+        0,
+        .94,
+        .62
+    );
+
+
+    head.add(
+        lampBorder
+    );
+
+
+    const lamp =
+        new THREE.Mesh(
+
+            new THREE.CircleGeometry(
+                .13,
+                10
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0xffdc69
+
+            })
+
+        );
+
+
+    lamp.position.set(
+        0,
+        .94,
+        .69
+    );
+
+
+    head.add(
+        lamp
+    );
+
+
+    /* =====================================================
+       LEGS
+    ===================================================== */
+
+    const leftLeg =
+        createLeg();
+
+
+    const rightLeg =
+        createLeg();
+
+
+    leftLeg.position.set(
+        -.32,
+        .93,
+        0
+    );
+
+
+    rightLeg.position.set(
+        .32,
+        .93,
+        0
+    );
+
+
+    root.add(
+        leftLeg,
+        rightLeg
+    );
+
+
+    /* =====================================================
+       ARMS
+    ===================================================== */
+
+    const leftArm =
+        createArm();
+
+
+    const rightArm =
+        createArm();
+
+
+    leftArm.position.set(
+        -.65,
+        1.68,
+        0
+    );
+
+
+    rightArm.position.set(
+        .65,
+        1.68,
+        0
+    );
+
+
+    root.add(
+        leftArm,
+        rightArm
+    );
+
+
+    /* =====================================================
+       PICKAXE
+    ===================================================== */
+
+    const pickaxe =
+        new THREE.Group();
+
+
+    const handle =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .045,
+                .055,
+                1.25,
+                6
+            ),
+
+            toon(
+                COLOR.wood
+            )
+
+        );
+
+
+    pickaxe.add(
+        handle
+    );
+
+
+    const pickHead =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .9,
+                .09,
+                .10
+            ),
+
+            toon(
+                0x717078
+            )
+
+        );
+
+
+    pickHead.position.y =
+        .58;
+
+
+    pickaxe.add(
+        pickHead
+    );
+
+
+    pickaxe.position.set(
+        .20,
+        -.67,
+        .04
+    );
+
+
+    pickaxe.rotation.z =
+        -.22;
+
+
+    rightArm.add(
+        pickaxe
+    );
+
+
+    /* =====================================================
+       BELT
+    ===================================================== */
+
+    const belt =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                1.08,
+                .17,
+                .85
+            ),
+
+            toon(
+                COLOR.leather
+            )
+
+        );
+
+
+    belt.position.set(
+        0,
+        1.27,
+        0
+    );
+
+
+    root.add(
+        belt
+    );
+
+
+    const buckle =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .27,
+                .24,
+                .08
+            ),
+
+            toon(
+                COLOR.gold
+            )
+
+        );
+
+
+    buckle.position.set(
+        0,
+        1.28,
+        .47
+    );
+
+
+    root.add(
+        buckle
+    );
+
+
+    /* =====================================================
+       BACKPACK
+    ===================================================== */
+
+    const backpack =
+        new THREE.Mesh(
+
+            new THREE.SphereGeometry(
+                .46,
+                8,
+                6
+            ),
+
+            toon(
+                COLOR.leather
+            )
+
+        );
+
+
+    backpack.scale.set(
+        .9,
+        1.1,
+        .55
+    );
+
+
+    backpack.position.set(
+        0,
+        1.55,
+        -.57
+    );
+
+
+    root.add(
+        backpack
+    );
+
+
+    /* =====================================================
+       FAKE CARTOON SHADOW
+    ===================================================== */
+
+    const blobShadow =
+        new THREE.Mesh(
+
+            new THREE.CircleGeometry(
+                .72,
+                16
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0x1b1119,
+
+                transparent:
+                    true,
+
+                opacity:
+                    .37,
+
+                depthWrite:
+                    false
+
+            })
+
+        );
+
+
+    blobShadow.rotation.x =
+        -Math.PI /
+        2;
+
+
+    blobShadow.position.y =
+        .025;
+
+
+    root.add(
+        blobShadow
+    );
+
+
+    root.userData = {
+
+        head,
+
+        body,
+
+        leftLeg,
+
+        rightLeg,
+
+        leftArm,
+
+        rightArm,
+
+        pickaxe,
+
+        blobShadow
+
+    };
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   LEG
+========================================================= */
+
+function createLeg() {
+
+    const group =
+        new THREE.Group();
+
+
+    const leg =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .17,
+                .19,
+                .6,
+                7
+            ),
+
+            toon(
+                COLOR.leather
+            )
+
+        );
+
+
+    leg.position.y =
+        -.30;
+
+
+    group.add(
+        leg
+    );
+
+
+    const boot =
+        addOutlinedMesh(
+
+            group,
+
+            new THREE.SphereGeometry(
+                .32,
+                8,
+                6
+            ),
+
+            toon(
+                COLOR.boot
+            ),
+
+            1.07
+
+        );
+
+
+    boot.scale.set(
+        1,
+        .5,
+        1.45
+    );
+
+
+    boot.position.set(
+        0,
+        -.62,
+        .16
+    );
+
+
+    return group;
+
+}
+
+
+/* =========================================================
+   ARM
+========================================================= */
+
+function createArm() {
+
+    const group =
+        new THREE.Group();
+
+
+    const arm =
+        new THREE.Mesh(
+
+            new THREE.CylinderGeometry(
+                .18,
+                .21,
+                .68,
+                7
+            ),
+
+            toon(
+                COLOR.greenLight
+            )
+
+        );
+
+
+    arm.position.y =
+        -.31;
+
+
+    group.add(
+        arm
+    );
+
+
+    const hand =
+        addOutlinedMesh(
+
+            group,
+
+            new THREE.SphereGeometry(
+                .21,
+                7,
+                5
+            ),
+
+            toon(
+                COLOR.leatherDark
+            ),
+
+            1.06
+
+        );
+
+
+    hand.position.y =
+        -.67;
+
+
+    return group;
+
+}
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const gnome =
+    createGnome();
+
+
+scene.add(
+    gnome
+);
+
+
+/* =========================================================
+   ENVIRONMENT SEGMENTS
+========================================================= */
+
+const segments =
+    [];
+
+
+/* =========================================================
+   CREATE SEGMENT
+========================================================= */
+
+function createSegment(
+    index
+) {
+
+    const root =
+        new THREE.Group();
+
+
+    root.position.z =
+        index *
+        SEGMENT_LENGTH;
+
+
+    /* road */
+
+    const ground =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                9,
+                .25,
+                SEGMENT_LENGTH
+            ),
+
+            toon(
+                COLOR.ground
+            )
+
+        );
+
+
+    ground.position.y =
+        -.13;
+
+
+    root.add(
+        ground
+    );
+
+
+    /* darker road stripe */
+
+    const road =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                7.4,
+                .03,
+                SEGMENT_LENGTH
+            ),
+
+            toon(
+                0x74594b
+            )
+
+        );
+
+
+    road.position.y =
+        .015;
+
+
+    root.add(
+        road
+    );
+
+
+    /* side stones */
+
+    const rockCount =
+        MOBILE
+            ? 6
+            : 9;
+
+
+    for (
+        let i = 0;
+        i < rockCount;
+        i++
+    ) {
+
+        const side =
+            Math.random() >
+            .5
+            ?
+            1
+            :
+            -1;
+
+
+        const rock =
+            new THREE.Mesh(
+
+                new THREE.DodecahedronGeometry(
+                    .9 +
+                    Math.random() *
+                    .6,
+                    0
+                ),
+
+                toon(
+
+                    Math.random() >
+                    .5
+                    ?
+                    COLOR.rock
+                    :
+                    COLOR.rockDark
+
+                )
+
+            );
+
+
+        rock.scale.set(
+
+            .9 +
+            Math.random() *
+            .5,
+
+            1 +
+            Math.random() *
+            1.1,
+
+            .7 +
+            Math.random() *
+            .5
+
+        );
+
+
+        rock.position.set(
+
+            side *
+            (
+                5 +
+                Math.random() *
+                1.4
+            ),
+
+            .65 +
+            Math.random(),
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            SEGMENT_LENGTH
+
+        );
+
+
+        rock.rotation.set(
+
+            Math.random(),
+
+            Math.random(),
+
+            Math.random()
+
+        );
+
+
+        root.add(
+            rock
+        );
+
+    }
+
+
+    /* purple crystals */
+
+    const crystalCount =
+        MOBILE
+            ? 2
+            : 4;
+
+
+    for (
+        let i = 0;
+        i < crystalCount;
+        i++
+    ) {
+
+        const crystal =
+            createCrystal();
+
+
+        crystal.position.set(
+
+            (
+                Math.random() >
+                .5
+                ?
+                1
+                :
+                -1
+            )
+            *
+            (
+                4.5 +
+                Math.random()
+            ),
+
+            0,
+
+            (
+                Math.random() -
+                .5
+            )
+            *
+            SEGMENT_LENGTH
+
+        );
+
+
+        root.add(
+            crystal
+        );
+
+    }
+
+
+    /* support beam */
+
+    if (
+        index % 2 === 0
+    ) {
+
+        const beam =
+            createBeam();
+
+
+        beam.position.z =
+            2;
+
+
+        root.add(
+            beam
+        );
+
+    }
+
+
+    scene.add(
+        root
+    );
+
+
+    segments.push(
+        root
+    );
+
+}
+
+
+/* =========================================================
+   CRYSTAL
+========================================================= */
+
+function createCrystal() {
+
+    const root =
+        new THREE.Group();
+
+
+    const amount =
+        MOBILE
+            ? 2
+            : 3;
+
+
+    for (
+        let i = 0;
+        i < amount;
+        i++
+    ) {
+
+        const crystal =
+            new THREE.Mesh(
+
+                new THREE.OctahedronGeometry(
+                    .25 +
+                    Math.random() *
+                    .20,
+                    0
+                ),
+
+                toon(
+                    i % 2
+                    ?
+                    COLOR.crystal
+                    :
+                    COLOR.crystalDark
+                )
+
+            );
+
+
+        crystal.scale.y =
+            1.8 +
+            Math.random() *
+            1.4;
+
+
+        crystal.position.set(
+
+            (
+                i -
+                1
+            )
+            *
+            .28,
+
+            .4,
+
+            0
+
+        );
+
+
+        crystal.rotation.z =
+            (
+                Math.random() -
+                .5
+            )
+            *
+            .3;
+
+
+        root.add(
+            crystal
+        );
+
+    }
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   WOOD SUPPORT
+========================================================= */
+
+function createBeam() {
+
+    const root =
+        new THREE.Group();
+
+
+    const material =
+        toon(
+            COLOR.wood
+        );
+
+
+    const left =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                .35,
+                4.8,
+                .4
+            ),
+
+            material
+
+        );
+
+
+    left.position.set(
+        -4,
+        2.35,
+        0
+    );
+
+
+    root.add(
+        left
+    );
+
+
+    const right =
+        left.clone();
+
+
+    right.position.x =
+        4;
+
+
+    root.add(
+        right
+    );
+
+
+    const top =
+        new THREE.Mesh(
+
+            new THREE.BoxGeometry(
+                8.3,
+                .38,
+                .4
+            ),
+
+            material
+
+        );
+
+
+    top.position.y =
+        4.6;
+
+
+    root.add(
+        top
+    );
+
+
+    /* simple painted lamp */
+
+    const lamp =
+        new THREE.Mesh(
+
+            new THREE.SphereGeometry(
+                .17,
+                7,
+                5
+            ),
+
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0xffcc62
+
+            })
+
+        );
+
+
+    lamp.position.set(
+        0,
+        4.14,
+        .10
+    );
+
+
+    root.add(
+        lamp
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   INITIAL SEGMENTS
+========================================================= */
+
+for (
+    let i = 0;
+    i < SEGMENT_COUNT;
+    i++
+) {
+
+    createSegment(
+        i
+    );
+
+}
+
+
+/* =========================================================
+   OBJECT POOLS
+========================================================= */
+
+const GOLD_POOL_SIZE =
+    MOBILE
+        ? 22
+        : 32;
+
+
+const ROCK_POOL_SIZE =
+    MOBILE
+        ? 10
+        : 15;
+
+
+const goldPool =
+    [];
+
+
+const rockPool =
+    [];
+
+
+/* =========================================================
+   GOLD OBJECT
+========================================================= */
+
+function makeGold() {
+
+    const root =
+        new THREE.Group();
+
+
+    const nugget =
+        addOutlinedMesh(
+
+            root,
+
+            new THREE.IcosahedronGeometry(
+                .28,
+                0
+            ),
+
+            toon(
+                COLOR.goldLight
+            ),
+
+            1.10
+
+        );
+
+
+    nugget.scale.set(
+        1.15,
+        .8,
+        .85
+    );
+
+
+    root.visible =
+        false;
+
+
+    scene.add(
+        root
+    );
+
+
+    root.userData.active =
+        false;
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   ROCK OBJECT
+========================================================= */
+
+function makeObstacle() {
+
+    const root =
+        new THREE.Group();
+
+
+    const rock =
+        addOutlinedMesh(
+
+            root,
+
+            new THREE.DodecahedronGeometry(
+                .67,
+                0
+            ),
+
+            toon(
+                COLOR.rockDark
+            ),
+
+            1.07
+
+        );
+
+
+    rock.scale.set(
+        1.1,
+        .75,
+        .95
+    );
+
+
+    rock.position.y =
+        .48;
+
+
+    root.visible =
+        false;
+
+
+    root.userData.active =
+        false;
+
+
+    scene.add(
+        root
+    );
+
+
+    return root;
+
+}
+
+
+/* =========================================================
+   BUILD POOLS
+========================================================= */
+
+for (
+    let i = 0;
+    i < GOLD_POOL_SIZE;
+    i++
+) {
+
+    goldPool.push(
+        makeGold()
+    );
+
+}
+
+
+for (
+    let i = 0;
+    i < ROCK_POOL_SIZE;
+    i++
+) {
+
+    rockPool.push(
+        makeObstacle()
+    );
+
+}
+
+
+/* =========================================================
+   GET FROM POOL
+========================================================= */
+
+function getInactive(
+    pool
+) {
+
+    return pool.find(
+        item =>
+            !item.userData.active
+    );
+
+}
+
+
+/* =========================================================
+   ACTIVATE GOLD
+========================================================= */
+
+function spawnGold(
+    lane,
+    z,
+    y = 1
+) {
+
+    const object =
+        getInactive(
+            goldPool
+        );
+
+
+    if (!object)
+        return;
+
+
+    object.userData.active =
+        true;
+
+
+    object.visible =
+        true;
+
+
+    object.position.set(
+        LANES[lane],
+        y,
+        z
+    );
+
+
+    object.rotation.set(
+        Math.random(),
+        Math.random(),
+        Math.random()
+    );
+
+}
+
+
+/* =========================================================
+   ACTIVATE ROCK
+========================================================= */
+
+function spawnRock(
+    lane,
+    z
+) {
+
+    const object =
+        getInactive(
+            rockPool
+        );
+
+
+    if (!object)
+        return;
+
+
+    object.userData.active =
+        true;
+
+
+    object.visible =
+        true;
+
+
+    object.position.set(
+        LANES[lane],
+        0,
+        z
+    );
+
+
+    object.rotation.y =
+        Math.random() *
+        Math.PI;
+
+}
+
+
+/* =========================================================
+   DISABLE OBJECT
+========================================================= */
+
+function disableObject(
+    object
+) {
+
+    object.userData.active =
+        false;
+
+
+    object.visible =
+        false;
+
+}
+
+
+/* =========================================================
+   SPAWN PATTERNS
+========================================================= */
+
+let nextSpawnZ =
+    20;
+
+
+function spawnPattern(
+    difficulty
+) {
+
+    const r =
+        Math.random();
+
+
+    /* straight gold */
+
+    if (
+        r < .40
+    ) {
+
+        const lane =
+            Math.floor(
+                Math.random() *
+                3
+            );
+
+
+        const count =
+            4;
+
+
+        for (
+            let i = 0;
+            i < count;
+            i++
+        ) {
+
+            spawnGold(
+
+                lane,
+
+                nextSpawnZ +
+                i *
+                1.4,
+
+                1 +
+                Math.sin(
+                    i *
+                    .9
+                )
+                *
+                .12
+
+            );
+
+        }
+
+
+        nextSpawnZ +=
+            7.2;
+
+    }
+
+
+    /* rock + safe gold */
+
+    else if (
+        r < .78
+    ) {
+
+        const blocked =
+            Math.floor(
+                Math.random() *
+                3
+            );
+
+
+        spawnRock(
+            blocked,
+            nextSpawnZ
+        );
+
+
+        const safe =
+            (
+                blocked +
+                1 +
+                Math.floor(
+                    Math.random() *
+                    2
+                )
+            )
+            %
+            3;
+
+
+        spawnGold(
+            safe,
+            nextSpawnZ,
+            1
+        );
+
+
+        spawnGold(
+            safe,
+            nextSpawnZ + 1.4,
+            1
+        );
+
+
+        nextSpawnZ +=
+
+            6.8 -
+            difficulty *
+            1.1;
+
+    }
+
+
+    /* two rocks */
+
+    else {
+
+        const safeLane =
+            Math.floor(
+                Math.random() *
+                3
+            );
+
+
+        for (
+            let lane = 0;
+            lane < 3;
+            lane++
+        ) {
+
+            if (
+                lane !==
+                safeLane
+            ) {
+
+                spawnRock(
+                    lane,
+                    nextSpawnZ
+                );
+
+            }
+
+        }
+
+
+        spawnGold(
+            safeLane,
+            nextSpawnZ,
+            1
+        );
+
+
+        spawnGold(
+            safeLane,
+            nextSpawnZ + 1.3,
+            1
+        );
+
+
+        nextSpawnZ +=
+
+            7.5 -
+            difficulty *
+            1.3;
+
+    }
+
+}
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+let gameRunning =
+    false;
+
+
+let playerZ =
+    0;
+
+
+let targetLane =
+    1;
+
+
+let jumpY =
+    0;
+
+
+let velocityY =
+    0;
+
+
+let grounded =
+    true;
+
+
+let speed =
+    BASE_SPEED;
+
+
+let elapsed =
+    0;
+
+
+let distance =
+    0;
+
+
+let gold =
+    0;
+
+
+let score =
+    0;
+
+
+let runPhase =
+    0;
+
+
+/* =========================================================
+   UI REFERENCES
+========================================================= */
+
+const distanceEl =
+    document.getElementById(
+        "distance"
+    );
+
+
+const goldEl =
+    document.getElementById(
+        "gold"
+    );
+
+
+const scoreEl =
+    document.getElementById(
+        "score"
+    );
+
+
+const speedEl =
+    document.getElementById(
+        "speed"
+    );
+
+
+const startScreen =
+    document.getElementById(
+        "startScreen"
+    );
+
+
+const gameOver =
+    document.getElementById(
+        "gameOver"
+    );
+
+
+const leaderboardScreen =
+    document.getElementById(
+        "leaderboardScreen"
+    );
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+function left() {
+
+    if (!gameRunning)
+        return;
+
+
+    targetLane =
+        Math.max(
+            0,
+            targetLane - 1
+        );
+
+}
+
+
+function right() {
+
+    if (!gameRunning)
+        return;
+
+
+    targetLane =
+        Math.min(
+            2,
+            targetLane + 1
+        );
+
+}
+
+
+function jump() {
+
+    if (
+        !gameRunning ||
+        !grounded
+    )
+        return;
+
+
+    velocityY =
+        7.1;
+
+
+    grounded =
+        false;
+
+}
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.code ===
+            "ArrowLeft" ||
+            event.code ===
+            "KeyA"
+        ) {
+
+            left();
+
+        }
+
+        else if (
+            event.code ===
+            "ArrowRight" ||
+            event.code ===
+            "KeyD"
+        ) {
+
+            right();
+
+        }
+
+        else if (
+            event.code ===
+            "Space" ||
+            event.code ===
+            "ArrowUp"
+        ) {
+
+            event.preventDefault();
+
+            jump();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   MOBILE BUTTONS
+========================================================= */
+
+document
+    .getElementById(
+        "leftButton"
+    )
+    .addEventListener(
+        "pointerdown",
+        left
+    );
+
+
+document
+    .getElementById(
+        "rightButton"
+    )
+    .addEventListener(
+        "pointerdown",
+        right
+    );
+
+
+document
+    .getElementById(
+        "jumpButton"
+    )
+    .addEventListener(
+        "pointerdown",
+        jump
+    );
+
+
+/* =========================================================
+   SWIPES
+========================================================= */
+
+let swipeX =
+    0;
+
+
+let swipeY =
+    0;
+
+
+renderer.domElement.addEventListener(
+    "pointerdown",
+    e => {
+
+        swipeX =
+            e.clientX;
+
+
+        swipeY =
+            e.clientY;
+
+    }
+);
+
+
+renderer.domElement.addEventListener(
+    "pointerup",
+    e => {
+
+        if (!gameRunning)
+            return;
+
+
+        const dx =
+            e.clientX -
+            swipeX;
+
+
+        const dy =
+            e.clientY -
+            swipeY;
+
+
+        if (
+            Math.abs(dx) <
+            35 &&
+            Math.abs(dy) <
+            35
+        )
+            return;
+
+
+        if (
+            Math.abs(dx) >
+            Math.abs(dy)
+        ) {
+
+            dx > 0
+                ?
+                right()
+                :
+                left();
+
+        }
+
+        else if (
+            dy < 0
+        ) {
+
+            jump();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RESET POOLS
+========================================================= */
+
+function resetPools() {
+
+    [
+        ...goldPool,
+        ...rockPool
+    ]
+    .forEach(
+        disableObject
+    );
+
+}
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function startGame() {
+
+    resetPools();
+
+
+    playerZ =
+        0;
+
+
+    targetLane =
+        1;
+
+
+    jumpY =
+        0;
+
+
+    velocityY =
+        0;
+
+
+    grounded =
+        true;
+
+
+    speed =
+        BASE_SPEED;
+
+
+    elapsed =
+        0;
+
+
+    distance =
+        0;
+
+
+    gold =
+        0;
+
+
+    score =
+        0;
+
+
+    runPhase =
+        0;
+
+
+    nextSpawnZ =
+        18;
+
+
+    gnome.position.set(
+        0,
+        0,
+        0
+    );
+
+
+    camera.position.set(
+        0,
+        4.8,
+        -8
+    );
+
+
+    for (
+        let i = 0;
+        i < segments.length;
+        i++
+    ) {
+
+        segments[i]
+            .position.z =
+            i *
+            SEGMENT_LENGTH;
+
+    }
+
+
+    startScreen
+        .classList
+        .add(
+            "hidden"
+        );
+
+
+    gameOver
+        .classList
+        .add(
+            "hidden"
+        );
+
+
+    leaderboardScreen
+        .classList
+        .add(
+            "hidden"
+        );
+
+
+    gameRunning =
+        true;
+
+}
+
+
+/* =========================================================
+   END GAME
+========================================================= */
+
+function endGame() {
+
+    if (!gameRunning)
+        return;
+
+
+    gameRunning =
+        false;
+
+
+    document
+        .getElementById(
+            "finalScore"
+        )
+        .textContent =
+        Math.floor(
+            score
+        );
+
+
+    document
+        .getElementById(
+            "finalGold"
+        )
+        .textContent =
+        gold;
+
+
+    document
+        .getElementById(
+            "walletInput"
+        )
+        .value =
+        "";
+
+
+    document
+        .getElementById(
+            "walletError"
+        )
+        .textContent =
+        "";
+
+
+    gameOver
+        .classList
+        .remove(
+            "hidden"
+        );
+
+}
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function processPool(
+    pool,
+    type,
+    delta
+) {
+
+    for (
+        const object
+        of pool
+    ) {
+
+        if (
+            !object
+                .userData
+                .active
+        )
+            continue;
+
+
+        const dz =
+            object.position.z -
+            playerZ;
+
+
+        if (
+            type ===
+            "gold"
+        ) {
+
+            object.rotation.y +=
+                delta *
+                3;
+
+
+            object.rotation.x +=
+                delta *
+                1.4;
+
+        }
+
+
+        if (
+            Math.abs(dz) <
+            .72
+            &&
+            Math.abs(
+                object.position.x -
+                gnome.position.x
+            )
+            <
+            .72
+        ) {
+
+            if (
+                type ===
+                "gold"
+            ) {
+
+                gold++;
+
+
+                score +=
+                    100;
+
+
+                disableObject(
+                    object
+                );
+
+
+                continue;
+
+            }
+
+
+            if (
+                jumpY <
+                .72
+            ) {
+
+                endGame();
+
+                return;
+
+            }
+
+        }
+
+
+        if (
+            object.position.z <
+            playerZ -
+            10
+        ) {
+
+            disableObject(
+                object
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   RUN ANIMATION
+========================================================= */
+
+function animateRunner(
+    delta
+) {
+
+    runPhase +=
+
+        delta *
+        (
+            8 +
+            speed *
+            .45
+        );
+
+
+    const a =
+        Math.sin(
+            runPhase
+        );
+
+
+    const b =
+        Math.sin(
+            runPhase +
+            Math.PI
+        );
+
+
+    const data =
+        gnome.userData;
+
+
+    if (grounded) {
+
+        data.leftLeg.rotation.x =
+            a *
+            .70;
+
+
+        data.rightLeg.rotation.x =
+            b *
+            .70;
+
+
+        data.leftArm.rotation.x =
+            b *
+            .47;
+
+
+        data.rightArm.rotation.x =
+            a *
+            .47;
+
+
+        data.body.rotation.z =
+            a *
+            .035;
+
+
+        data.head.rotation.z =
+            -a *
+            .025;
+
+
+        data.head.rotation.y =
+            a *
+            .018;
+
+
+        data.pickaxe.rotation.z =
+            -.22 +
+            a *
+            .13;
+
+    }
+
+    else {
+
+        data.leftLeg.rotation.x =
+            -.35;
+
+
+        data.rightLeg.rotation.x =
+            .30;
+
+
+        data.leftArm.rotation.x =
+            -.25;
+
+
+        data.rightArm.rotation.x =
+            -.42;
+
+    }
+
+
+    /* fake squash & stretch */
+
+    const squash =
+        grounded
+        ?
+        1 +
+        Math.abs(a) *
+        .025
+        :
+        1;
+
+
+    gnome.scale.y =
+        squash;
+
+
+    gnome.scale.x =
+        2 -
+        squash;
+
+}
+
+
+/* =========================================================
+   RECYCLE ENVIRONMENT
+========================================================= */
+
+function recycleSegments() {
+
+    let farthest =
+        -Infinity;
+
+
+    for (
+        const segment
+        of segments
+    ) {
+
+        farthest =
+            Math.max(
+                farthest,
+                segment.position.z
+            );
+
+    }
+
+
+    for (
+        const segment
+        of segments
+    ) {
+
+        if (
+            segment.position.z +
+            SEGMENT_LENGTH
+            <
+            playerZ -
+            SEGMENT_LENGTH
+        ) {
+
+            segment.position.z =
+                farthest +
+                SEGMENT_LENGTH;
+
+
+            farthest =
+                segment.position.z;
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   EVM
+========================================================= */
+
+function validWallet(
+    address
+) {
+
+    return /^0x[a-fA-F0-9]{40}$/
+        .test(
+            address
+        );
+
+}
+
+
+/* =========================================================
+   SAVE SCORE
+========================================================= */
+
+function saveLeaderboard(
+    wallet,
+    scoreValue,
+    goldValue
+) {
+
+    const key =
+        "gnomeRunnerCartoon";
+
+
+    let data =
+        JSON.parse(
+
+            localStorage
+                .getItem(
+                    key
+                )
+            ||
+            "[]"
+
+        );
+
+
+    wallet =
+        wallet
+        .toLowerCase();
+
+
+    const old =
+        data.find(
+
+            entry =>
+                entry.wallet ===
+                wallet
+
+        );
+
+
+    if (old) {
+
+        if (
+            scoreValue >
+            old.score
+        ) {
+
+            old.score =
+                scoreValue;
+
+
+            old.gold =
+                goldValue;
+
+        }
+
+    }
+
+    else {
+
+        data.push({
+
+            wallet,
+
+            score:
+                scoreValue,
+
+            gold:
+                goldValue
+
+        });
+
+    }
+
+
+    data.sort(
+        (
+            a,
+            b
+        ) =>
+            b.score -
+            a.score
+    );
+
+
+    data =
+        data.slice(
+            0,
+            20
+        );
+
+
+    localStorage.setItem(
+
+        key,
+
+        JSON.stringify(
+            data
+        )
+
+    );
+
+}
+
+
+/* =========================================================
+   DISPLAY LEADERBOARD
+========================================================= */
+
+function showLeaderboard() {
+
+    const box =
+        document.getElementById(
+            "leaderboard"
+        );
+
+
+    box.innerHTML =
+        "";
+
+
+    const data =
+        JSON.parse(
+
+            localStorage
+                .getItem(
+                    "gnomeRunnerCartoon"
+                )
+            ||
+            "[]"
+
+        );
+
+
+    if (
+        !data.length
+    ) {
+
+        box.innerHTML =
+            `
+            <p class="description">
+                Пока здесь подозрительно пусто.
+                Ни одного великого шахтёра.
+            </p>
+            `;
+
+
+        return;
+
+    }
+
+
+    data.forEach(
+        (
+            entry,
+            index
+        ) => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "leaderRow";
+
+
+            let rank =
+                "#" +
+                (
+                    index + 1
+                );
+
+
+            if (
+                index === 0
+            )
+                rank = "🥇";
+
+
+            if (
+                index === 1
+            )
+                rank = "🥈";
+
+
+            if (
+                index === 2
+            )
+                rank = "🥉";
+
+
+            const short =
+                entry.wallet.slice(
+                    0,
+                    6
+                )
+                +
+                "..."
+                +
+                entry.wallet.slice(
+                    -4
+                );
+
+
+            row.innerHTML =
+                `
+
+                <div>
+                    ${rank}
+                </div>
+
+                <div class="wallet">
+                    ${short}
+                </div>
+
+                <div class="score">
+                    ${entry.score}
+                </div>
+
+                `;
+
+
+            box.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================================
+   UI EVENTS
+========================================================= */
+
+document
+    .getElementById(
+        "startButton"
+    )
+    .onclick =
+    startGame;
+
+
+document
+    .getElementById(
+        "restartButton"
+    )
+    .onclick =
+    startGame;
+
+
+document
+    .getElementById(
+        "showLeaderboardStart"
+    )
+    .onclick =
+    () => {
+
+        startScreen
+            .classList
+            .add(
+                "hidden"
+            );
+
+
+        showLeaderboard();
+
+
+        leaderboardScreen
+            .classList
+            .remove(
+                "hidden"
+            );
+
+    };
+
+
+document
+    .getElementById(
+        "closeLeaderboard"
+    )
+    .onclick =
+    () => {
+
+        leaderboardScreen
+            .classList
+            .add(
+                "hidden"
+            );
+
+
+        startScreen
+            .classList
+            .remove(
+                "hidden"
+            );
+
+    };
+
+
+document
+    .getElementById(
+        "saveScore"
+    )
+    .onclick =
+    () => {
+
+        const wallet =
+            document
+                .getElementById(
+                    "walletInput"
+                )
+                .value
+                .trim();
+
+
+        const error =
+            document
+                .getElementById(
+                    "walletError"
+                );
+
+
+        if (
+            !validWallet(
+                wallet
+            )
+        ) {
+
+            error.textContent =
+                "Нужен корректный EVM-адрес: 0x + 40 символов.";
+
+
+            return;
+
+        }
+
+
+        saveLeaderboard(
+
+            wallet,
+
+            Math.floor(
+                score
+            ),
+
+            gold
+
+        );
+
+
+        gameOver
+            .classList
+            .add(
+                "hidden"
+            );
+
+
+        showLeaderboard();
+
+
+        leaderboardScreen
+            .classList
+            .remove(
+                "hidden"
+            );
+
+    };
+
+
+/* =========================================================
+   CLOCK
+========================================================= */
+
+const clock =
+    new THREE.Clock();
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function loop() {
+
+    requestAnimationFrame(
+        loop
+    );
+
+
+    const delta =
+        Math.min(
+            clock.getDelta(),
+            .033
+        );
+
+
+    if (
+        gameRunning
+    ) {
+
+        elapsed +=
+            delta;
+
+
+        const difficulty =
+            Math.min(
+                1,
+                elapsed /
+                100
+            );
+
+
+        /* =================================================
+           SPEED
+        ================================================= */
+
+        speed =
+            Math.min(
+
+                MAX_SPEED,
+
+                BASE_SPEED +
+                elapsed *
+                .13
+
+            );
+
+
+        /* =================================================
+           REAL FORWARD MOVEMENT
+        ================================================= */
+
+        playerZ +=
+            speed *
+            delta;
+
+
+        gnome.position.z =
+            playerZ;
+
+
+        distance =
+            Math.floor(
+                playerZ
+            );
+
+
+        score +=
+            speed *
+            delta *
+            2;
+
+
+        /* =================================================
+           LANE
+        ================================================= */
+
+        const targetX =
+            LANES[
+                targetLane
+            ];
+
+
+        gnome.position.x +=
+
+            (
+                targetX -
+                gnome.position.x
+            )
+
+            *
+
+            Math.min(
+                1,
+                delta *
+                12
+            );
+
+
+        const horizontal =
+            targetX -
+            gnome.position.x;
+
+
+        gnome.rotation.z =
+
+            THREE.MathUtils
+                .lerp(
+
+                    gnome.rotation.z,
+
+                    -horizontal *
+                    .05,
+
+                    delta *
+                    7
+
+                );
+
+
+        /* =================================================
+           JUMP
+        ================================================= */
+
+        velocityY -=
+            18 *
+            delta;
+
+
+        jumpY +=
+            velocityY *
+            delta;
+
+
+        if (
+            jumpY <=
+            0
+        ) {
+
+            jumpY =
+                0;
+
+
+            velocityY =
+                0;
+
+
+            grounded =
+                true;
+
+        }
+
+
+        const bob =
+            grounded
+            ?
+            Math.abs(
+                Math.sin(
+                    runPhase
+                )
+            )
+            *
+            .045
+            :
+            0;
+
+
+        gnome.position.y =
+            jumpY +
+            bob;
+
+
+        /* =================================================
+           ANIMATION
+        ================================================= */
+
+        animateRunner(
+            delta
+        );
+
+
+        /* =================================================
+           SPAWN AHEAD
+        ================================================= */
+
+        while (
+            nextSpawnZ <
+            playerZ +
+            55
+        ) {
+
+            spawnPattern(
+                difficulty
+            );
+
+        }
+
+
+        /* =================================================
+           COLLISIONS
+        ================================================= */
+
+        processPool(
+            goldPool,
+            "gold",
+            delta
+        );
+
+
+        processPool(
+            rockPool,
+            "rock",
+            delta
+        );
+
+
+        /* =================================================
+           WORLD
+        ================================================= */
+
+        recycleSegments();
+
+
+        /* =================================================
+           CAMERA
+        ================================================= */
+
+        camera.position.x =
+
+            THREE.MathUtils
+            .lerp(
+
+                camera.position.x,
+
+                gnome.position.x *
+                .18,
+
+                delta *
+                4
+
+            );
+
+
+        camera.position.y =
+
+            THREE.MathUtils
+            .lerp(
+
+                camera.position.y,
+
+                4.5 +
+                jumpY *
+                .12,
+
+                delta *
+                4
+
+            );
+
+
+        camera.position.z =
+
+            THREE.MathUtils
+            .lerp(
+
+                camera.position.z,
+
+                playerZ -
+                7.8,
+
+                delta *
+                7
+
+            );
+
+
+        camera.lookAt(
+
+            gnome.position.x *
+            .12,
+
+            1.7 +
+            jumpY *
+            .10,
+
+            playerZ +
+            9
+
+        );
+
+
+        /* =================================================
+           HUD
+        ================================================= */
+
+        distanceEl.textContent =
+            distance +
+            " m";
+
+
+        goldEl.textContent =
+            gold;
+
+
+        scoreEl.textContent =
+            Math.floor(
+                score
+            );
+
+
+        speedEl.textContent =
+
+            (
+                speed /
+                BASE_SPEED
+            )
+            .toFixed(
+                1
+            )
+            +
+            "x";
+
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+
+}
+
+
+/* =========================================================
+   START LOOP
+========================================================= */
+
+loop();
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+addEventListener(
+    "resize",
+    () => {
+
+        camera.aspect =
+            innerWidth /
+            innerHeight;
+
+
+        camera
+            .updateProjectionMatrix();
+
+
+        renderer.setSize(
+            innerWidth,
+            innerHeight
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>
